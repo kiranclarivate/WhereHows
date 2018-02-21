@@ -1,0 +1,11 @@
+# Push metadata to Elastic search server
+job.class=metadata.etl.elasticsearch.ElasticSearchBuildIndexETL
+job.cron.expr=0 0/10 * * * ?
+job.timeout=10000
+#job.cmd.params=
+# job.disabled=1
+job.ref.id=0
+
+elasticsearch.url=http://localhost
+elasticsearch.port=9200
+elasticsearch.index=wherehows
