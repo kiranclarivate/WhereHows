@@ -1,0 +1,46 @@
+# Fetch Oracle dataset metadata
+
+# Common ETL configs
+job.class=metadata.etl.JythonEtlJob
+job.cron.expr=0 0/15 * * * ?
+job.timeout=600
+#job.cmd.params=
+#job.disabled=1
+job.ref.id=82
+
+# Jython scripts
+job.jython.extract=jython/OracleExtract.py
+job.jython.load=jython/OracleLoad.py
+
+# Oracle JDBC driver
+oracle.db.driver=oracle.jdbc.OracleDriver
+
+# Oracle DB name
+oracle.db.name=PATENTS.WORLD
+
+# Oracle username
+oracle.db.username=ipsrun
+
+# Oracle password
+oracle.db.password=pats4u
+
+# Oracle JDBC URL
+oracle.db.jdbc.url=jdbc:oracle:thin:@10.236.110.205:1521/PATENTS.WORLD
+
+# Place to store datasets metadata csv file
+oracle.metadata=oracle.csv
+
+# Place to store dataset fields csv file
+oracle.field_metadata=oracle_field.csv
+
+# Place to store the sample data csv file
+oracle.sample_data=oracle_sample.csv
+
+# Whether to get sample data (True/False)
+oracle.load_sample=False
+
+# List of excluded databases in oracle
+oracle.exclude_db=
+
+# innodb_lock_wait_timeout when accessing MySQL Db
+innodb_lock_wait_timeout=1500

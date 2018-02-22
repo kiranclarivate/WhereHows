@@ -1,0 +1,18 @@
+# Push metadata to Elastic search server
+job.class=metadata.etl.JythonEtlJob
+job.cron.expr=0 0/10 * * * ?
+job.timeout=10000
+#job.cmd.params=
+job.disabled=1
+job.ref.id=0
+
+# Jython scripts
+job.jython.load=jython/ElasticSearchIndex.py
+
+elasticsearch.url=http://localhost
+elasticsearch.port=9200
+elasticsearch.index=wherehows
+elasticsearch.bulk.insert.size=200
+elasticsearch.url.request.timeout=20
+wh.db.max.retry.times=3
+wh.elasticsearch.index.mapping.file=your_index_mapping_file
