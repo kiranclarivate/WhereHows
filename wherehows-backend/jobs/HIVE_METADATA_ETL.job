@@ -49,7 +49,7 @@ hive.dependency_csv_file=/var/tmp/hive_dependency.csv
 hdfs.namenode.ipc.uri=your_namenode_ipc_uri
 
 # Enable/disable kerberos authentication & related configs
-kerberos.auth=True
+kerberos.auth=False
 kerberos.keytab.file=your_keytab_file
 kerberos.principal=your_principal
 

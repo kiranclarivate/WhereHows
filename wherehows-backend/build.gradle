@@ -1,3 +1,6 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+
 apply from: '../gradle/scripts/play.gradle'
 
 // Change this to listen on a different port
@@ -44,3 +47,21 @@ model {
         }
     }
 }
+
+def nexusUsername="$System.env.ORG_GRADLE_PROJECT_nexusUsername"
+def nexusPassword="$System.env.ORG_GRADLE_PROJECT_nexusPassword"
+
+uploadArchives {
+  repositories {
+    mavenDeployer {
+      repository(url: 'http://repo.oneplatform.build/nexus/content/repositories/releases/') {
+        authentication(userName: nexusUsername, password: nexusPassword)
+      }
+
+      snapshotRepository(url: 'http://repo.oneplatform.build/nexus/content/repositories/snapshots/') {
+        authentication(userName: nexusUsername, password: nexusPassword)
+      }
+    }
+  }
+}
+
