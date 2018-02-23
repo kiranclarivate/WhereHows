@@ -51,28 +51,16 @@ model {
 
 def nexusUsername="$System.env.ORG_GRADLE_PROJECT_nexusUsername"
 def nexusPassword="$System.env.ORG_GRADLE_PROJECT_nexusPassword"
-/*
-uploadArchives {
-  repositories {
-    mavenDeployer {
-      repository(url: 'http://repo.oneplatform.build/nexus/content/repositories/releases/') {
-        authentication(userName: nexusUsername, password: nexusPassword)
-      }
 
-      snapshotRepository(url: 'http://repo.oneplatform.build/nexus/content/repositories/snapshots/') {
-        authentication(userName: nexusUsername, password: nexusPassword)
-      }
-    }
-  }
-}*/
+
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        pdZipPublication(MavenPublication) {
             groupId 'com.clarivate.wherehows'
-            artifactId 'backend'
+            artifactId "${playBinaryBaseName}"
             version '1.0'
-            artifact source: dist, extension: 'zip'
+            artifact "${projectDir}/build/distributions/${playBinaryBaseName}.zip"
         }
     }
     repositories {
