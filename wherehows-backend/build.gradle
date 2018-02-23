@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 apply from: '../gradle/scripts/play.gradle'
 
@@ -50,7 +51,7 @@ model {
 
 def nexusUsername="$System.env.ORG_GRADLE_PROJECT_nexusUsername"
 def nexusPassword="$System.env.ORG_GRADLE_PROJECT_nexusPassword"
-
+/*
 uploadArchives {
   repositories {
     mavenDeployer {
@@ -63,5 +64,24 @@ uploadArchives {
       }
     }
   }
-}
+}*/
 
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'com.clarivate.wherehows'
+            artifactId 'backend'
+            version '1.0'
+            artifact source: dist, extension: 'zip'
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username nexusUsername
+                password nexusPassword
+            }
+            url 'http://repo.oneplatform.build/nexus/content/repositories/snapshots/'
+        }
+    }
+}
