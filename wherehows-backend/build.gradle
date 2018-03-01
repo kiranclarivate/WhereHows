@@ -8,7 +8,7 @@ apply from: '../gradle/scripts/play.gradle'
 project.ext.httpPort = 19000
 project.ext.playBinaryBaseName = "wherehows-backend"
 
-sourceCompatibility = 1.8
+//sourceCompatibility = 1.8
 
 dependencies {
     // User defined libraries (will be copied to lib/ before `play compile`)
