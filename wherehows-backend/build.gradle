@@ -8,6 +8,8 @@ apply from: '../gradle/scripts/play.gradle'
 project.ext.httpPort = 19000
 project.ext.playBinaryBaseName = "wherehows-backend"
 
+sourceCompatibility = 1.8
+
 dependencies {
     // User defined libraries (will be copied to lib/ before `play compile`)
     play project(":wherehows-common")
@@ -57,7 +59,7 @@ publishing {
         pdZipPublication(MavenPublication) {
             groupId 'com.clarivate.wherehows'
             artifactId "${playBinaryBaseName}"
-            version '1.0'
+            version 'SNAPSHOT'
             artifact "${projectDir}/build/distributions/${playBinaryBaseName}.zip"
         }
     }
@@ -69,7 +71,7 @@ publishing {
                 password nexusPassword
             }
             // url 'http://localhost:8081/nexus/content/repositories/releases/'
-            url 'http://repo.oneplatform.build/nexus/content/repositories/releases/'
+            url 'http://repo.oneplatform.build/nexus/content/repositories/snapshot/'
         }
     }
 }
