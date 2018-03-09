@@ -46,6 +46,9 @@ model {
                 from("jobs") {
                     into "jobs"
                 }
+                from("script") {
+                    into "bin"
+                }
             }
         }
     }
