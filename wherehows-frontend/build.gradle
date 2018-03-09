@@ -1,7 +1,3 @@
-apply plugin: 'java'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-
 apply from: '../gradle/scripts/play.gradle'
 
 // Change this to listen on a different port
@@ -42,6 +38,16 @@ model {
       }
     }
   }
+
+    distributions {
+        playBinary {
+            contents {
+                from("script") {
+                    into "bin"
+                }
+            }
+        }
+    }
 }
 
 task unzipAssets(type: Copy, dependsOn: configurations.assets) {
@@ -49,29 +55,4 @@ task unzipAssets(type: Copy, dependsOn: configurations.assets) {
   from {
    configurations.assets.collect{ zipTree(it) }
   }
-}
-
-def nexusUsername="$System.env.ORG_GRADLE_PROJECT_nexusUsername"
-def nexusPassword="$System.env.ORG_GRADLE_PROJECT_nexusPassword"
-
-publishing {
-    publications {
-        pdZipPublication(MavenPublication) {
-            groupId 'com.clarivate.wherehows'
-            artifactId "${playBinaryBaseName}"
-            version 'SNAPSHOT'
-            artifact "${projectDir}/build/distributions/${playBinaryBaseName}.zip"
-        }
-    }
-    repositories {
-        maven {
-
-            credentials {
-                username nexusUsername
-                password nexusPassword
-            }
-            // url 'http://localhost:8081/nexus/content/repositories/releases/'
-            url 'http://repo.oneplatform.build/nexus/content/repositories/snapshot/'
-        }
-    }
 }
