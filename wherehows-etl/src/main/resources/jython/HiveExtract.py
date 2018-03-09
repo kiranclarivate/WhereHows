@@ -145,6 +145,7 @@ class HiveExtract:
       join TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
       where
       p.PARAM_KEY = 'transient_lastDdlTime' and
+      t.TBL_ID in (select distinct TBL_ID FROM TABLE_PARAMS where PARAM_KEY='wherehows' AND PARAM_VALUE='true') and
       d.NAME in ('{db_name}') and not ((d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and t.TBL_TYPE = 'VIRTUAL_VIEW')
       order by 1,2
       """.format(db_name=database_name)
