@@ -115,7 +115,6 @@ class HiveExtract:
       join TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
       where
       p.PARAM_KEY = 'transient_lastDdlTime' and
-      t.TBL_ID in (select distinct TBL_ID FROM TABLE_PARAMS where PARAM_KEY='wherehows' AND PARAM_VALUE='true') and
       d.NAME in ('{db_name}') and (d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and d.NAME not like 'dalitest%' and t.TBL_TYPE = 'VIRTUAL_VIEW'
       order by DB_NAME, dataset_name, version DESC
       """.format(version='{version}', db_name=database_name)
@@ -146,12 +145,9 @@ class HiveExtract:
       join TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
       where
       p.PARAM_KEY = 'transient_lastDdlTime' and
-      t.TBL_ID in (select distinct TBL_ID FROM TABLE_PARAMS where PARAM_KEY='wherehows' AND PARAM_VALUE='true') and
       d.NAME in ('{db_name}') and not ((d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and t.TBL_TYPE = 'VIRTUAL_VIEW')
       order by 1,2
       """.format(db_name=database_name)
-
-    self.logger.info("1:" + tbl_info_sql)
     curs.execute(tbl_info_sql)
     rows = curs.fetchall()
     curs.close()
@@ -197,8 +193,6 @@ class HiveExtract:
       JOIN SDS s on et.SERDE_ID = s.SD_ID
       where d.NAME = '{db_name}'
       order by 1,2 """.format(db_name=database_name)
-
-    self.logger.info("2:" + tbl_info_sql)
     curs_et.execute(tbl_info_sql)
     rows = curs_et.fetchall()
     curs_et.close()
