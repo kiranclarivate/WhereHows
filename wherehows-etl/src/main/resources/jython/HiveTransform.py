@@ -20,12 +20,45 @@ from org.slf4j import LoggerFactory
 from wherehows.common.writers import FileWriter
 from wherehows.common.schemas import DatasetSchemaRecord, DatasetFieldRecord, HiveDependencyInstanceRecord, DatasetInstanceRecord
 from wherehows.common import Constant
-from HiveExtract import TableInfo
+# from HiveExtract import TableInfo
 from org.apache.hadoop.hive.ql.tools import LineageInfo
 from metadata.etl.dataset.hive import HiveViewDependency
 
 from HiveColumnParser import HiveColumnParser
 from AvroColumnParser import AvroColumnParser
+
+
+class TableInfo:
+    """ Class to define the variable name  """
+    table_name = 'name'
+    dataset_name = 'dataset_name'
+    native_name = 'native_name'
+    logical_name = 'logical_name'
+    version = 'version'
+    type = 'type'
+    serialization_format = 'serialization_format'
+    create_time = 'create_time'
+    schema_url = 'schema_url'
+    field_delimiter = 'field_delimiter'
+    db_id = 'DB_ID'
+    table_id = 'TBL_ID'
+    serde_id = 'SD_ID'
+    table_type = 'tbl_type'
+    location = 'location'
+    view_expended_text = 'view_expanded_text'
+    input_format = 'input_format'
+    output_format = 'output_format'
+    is_compressed = 'is_compressed'
+    is_storedassubdirectories = 'is_storedassubdirectories'
+    etl_source = 'etl_source'
+    source_modified_time = 'source_modified_time'
+
+    field_list = 'fields'
+    schema_literal = 'schema_literal'
+
+    optional_prop = [create_time, serialization_format, field_delimiter, schema_url, db_id, table_id, serde_id,
+                     table_type, location, view_expended_text, input_format, output_format, is_compressed,
+                     is_storedassubdirectories, etl_source]
 
 class HiveTransform:
   dataset_dict = {}
