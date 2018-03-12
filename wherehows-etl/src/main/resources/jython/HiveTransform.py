@@ -13,6 +13,7 @@
 #
 
 import json
+import re
 import sys
 import time
 from com.ziclix.python.sql import zxJDBC
@@ -24,8 +25,8 @@ from wherehows.common import Constant
 from org.apache.hadoop.hive.ql.tools import LineageInfo
 from metadata.etl.dataset.hive import HiveViewDependency
 
-from HiveColumnParser import HiveColumnParser
-from AvroColumnParser import AvroColumnParser
+# from HiveColumnParser import HiveColumnParser
+# from AvroColumnParser import AvroColumnParser
 
 
 class TableInfo:
@@ -59,6 +60,313 @@ class TableInfo:
     optional_prop = [create_time, serialization_format, field_delimiter, schema_url, db_id, table_id, serde_id,
                      table_type, location, view_expended_text, input_format, output_format, is_compressed,
                      is_storedassubdirectories, etl_source]
+
+class AvroColumnParser:
+    """
+    This class is used to parse the avro schema, get a list of columns inside it.
+    As avro is nested, we use a recursive way to parse it.
+    Currently used in HDFS avro file schema parsing and Hive avro schema parsing.
+    """
+
+    def __init__(self, avro_schema, urn = None):
+        """
+        :param avro_schema: json of schema
+        :param urn: optional, could contain inside schema
+        :return:
+        """
+        self.sort_id = 0
+        if not urn:
+            self.urn = avro_schema['uri'] if 'uri' in avro_schema else None
+        else:
+            self.urn = urn
+        self.result = []
+        self.fields_json_to_csv(self.result, '', avro_schema['fields'])
+
+    def get_column_list_result(self):
+        """
+
+        :return:
+        """
+        return self.result
+
+    def fields_json_to_csv(self, output_list_, parent_field_path, field_list_):
+        """
+            Recursive function, extract nested fields out of avro.
+        """
+        parent_id = self.sort_id
+
+        for f in field_list_:
+            self.sort_id += 1
+
+            o_field_name = f['name']
+            o_field_data_type = ''
+            o_field_data_size = None
+            o_field_nullable = 'N'
+            o_field_default = ''
+            o_field_namespace = ''
+            o_field_doc = ''
+            effective_type_index_in_type = -1
+
+            if f.has_key('namespace'):
+                o_field_namespace = f['namespace']
+
+            if f.has_key('default') and type(f['default']) != None:
+                o_field_default = f['default']
+
+            if not f.has_key('type'):
+                o_field_data_type = None
+            elif type(f['type']) == list:
+                i = effective_type_index = -1
+                for data_type in f['type']:
+                    i += 1  # current index
+                    if type(data_type) is None or (data_type == 'null'):
+                        o_field_nullable = 'Y'
+                    elif type(data_type) == dict:
+                        o_field_data_type = data_type['type']
+                        effective_type_index_in_type = i
+
+                        if data_type.has_key('namespace'):
+                            o_field_namespace = data_type['namespace']
+                        elif data_type.has_key('name'):
+                            o_field_namespace = data_type['name']
+
+                        if data_type.has_key('size'):
+                            o_field_data_size = data_type['size']
+                        else:
+                            o_field_data_size = None
+
+                    else:
+                        o_field_data_type = data_type
+                        effective_type_index_in_type = i
+            elif type(f['type']) == dict:
+                o_field_data_type = f['type']['type']
+            else:
+                o_field_data_type = f['type']
+                if f.has_key('attributes') and f['attributes'].has_key('nullable'):
+                    o_field_nullable = 'Y' if f['attributes']['nullable'] else 'N'
+                if f.has_key('attributes') and f['attributes'].has_key('size'):
+                    o_field_data_size = f['attributes']['size']
+
+            if f.has_key('doc'):
+                if len(f['doc']) == 0 and f.has_key('attributes'):
+                    o_field_doc = json.dumps(f['attributes'])
+                else:
+                    o_field_doc = f['doc']
+            elif f.has_key('comment'):
+                o_field_doc = f['comment']
+
+            output_list_.append(
+                [self.urn, self.sort_id, parent_id, parent_field_path, o_field_name, o_field_data_type, o_field_nullable,
+                 o_field_default, o_field_data_size, o_field_namespace,
+                 o_field_doc.replace("\n", ' ') if o_field_doc is not None else None])
+
+            # check if this field is a nested record
+            if type(f['type']) == dict and f['type'].has_key('fields'):
+                current_field_path = o_field_name if parent_field_path == '' else parent_field_path + '.' + o_field_name
+                self.fields_json_to_csv(output_list_, current_field_path, f['type']['fields'])
+            elif type(f['type']) == dict and f['type'].has_key('items') and type(f['type']['items']) == dict and f['type']['items'].has_key('fields'):
+                current_field_path = o_field_name if parent_field_path == '' else parent_field_path + '.' + o_field_name
+                self.fields_json_to_csv(output_list_, current_field_path, f['type']['items']['fields'])
+
+            if effective_type_index_in_type >= 0 and type(f['type'][effective_type_index_in_type]) == dict:
+                if f['type'][effective_type_index_in_type].has_key('items') and type(
+                        f['type'][effective_type_index_in_type]['items']) == list:
+
+                    for item in f['type'][effective_type_index_in_type]['items']:
+                        if type(item) == dict and item.has_key('fields'):
+                            current_field_path = o_field_name if parent_field_path == '' else parent_field_path + '.' + o_field_name
+                            self.fields_json_to_csv(output_list_, current_field_path, item['fields'])
+                elif f['type'][effective_type_index_in_type].has_key('items') and type(f['type'][effective_type_index_in_type]['items'])== dict and f['type'][effective_type_index_in_type]['items'].has_key('fields'):
+                    # type: [ null, { type: array, items: { name: xxx, type: record, fields: [] } } ]
+                    current_field_path = o_field_name if parent_field_path == '' else parent_field_path + '.' + o_field_name
+                    self.fields_json_to_csv(output_list_, current_field_path, f['type'][effective_type_index_in_type]['items']['fields'])
+                elif f['type'][effective_type_index_in_type].has_key('fields'):
+                    # if f['type'][effective_type_index_in_type].has_key('namespace'):
+                    # o_field_namespace = f['type'][effective_type_index_in_type]['namespace']
+                    current_field_path = o_field_name if parent_field_path == '' else parent_field_path + '.' + o_field_name
+                    self.fields_json_to_csv(output_list_, current_field_path, f['type'][effective_type_index_in_type]['fields'])
+
+                    # End of function
+
+
+class HiveColumnParser:
+    """
+    This class used for parsing a Hive metastore schema.
+    Major effort is parse complex column types :
+    Reference : https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types
+    """
+    def string_interface(self, dataset_urn, input):
+        schema = json.loads(input)
+        return HiveColumnParser(dataset_urn, schema)
+
+    def __init__(self, avro_schema, urn = None):
+        """
+
+        :param avro_schema json schema
+        :param urn:
+        :return:
+        """
+        self.prefix = ''
+        if not urn:
+            self.dataset_urn = avro_schema['uri'] if 'uri' in avro_schema else None
+        else:
+            self.dataset_urn = urn
+        self.column_type_dict = avro_schema
+        self.column_type_list = []
+        self.sort_id = 0
+        for index, f in enumerate(avro_schema['fields']):
+            avro_schema['fields'][index] = self.parse_column(f['ColumnName'], f['TypeName'], f['Comment'])
+
+        # padding list for rest 4 None, skip  is_nullable, default_value, data_size, namespace for now
+        self.column_type_list = [(x[:6] + [None] * 4 + x[6:]) for x in self.column_type_list]
+
+    def parse_column(self, column_name, type_string, comment=None):
+        """
+        Returns a dictionary of a Hive column's type metadata and
+         any complex or nested type info
+        """
+        simple_type, inner, comment_inside = self._parse_type(type_string)
+        comment = comment if comment else comment_inside
+        column = {'name': column_name, 'type' : simple_type, 'doc': comment}
+
+        self.sort_id += 1
+        self.column_type_list.append([self.dataset_urn, self.sort_id, 0, self.prefix, column_name, simple_type, comment])
+        if inner:
+            self.prefix = column_name
+            column.update(self._parse_complex(simple_type, inner, self.sort_id))
+
+        # reset prefix after each outermost field
+        self.prefix = ''
+        return column
+
+    def is_scalar_type(self, type_string):
+        return not (type_string.startswith('array') or type_string.startswith('map') or type_string.startswith(
+            'struct') or type_string.startswith('uniontype'))
+
+    def _parse_type(self, type_string):
+        pattern = re.compile(r"^([a-z]+[(),0-9]*)(<(.+)>)?( comment '(.*)')?$", re.IGNORECASE)
+        match = re.search(pattern, type_string)
+        if match is None:
+            return None, None, None
+        return match.group(1), match.group(3), match.group(5)
+
+    def _parse_complex(self, simple_type, inner, parent_id):
+        complex_type = {}
+        if simple_type == "array":
+            complex_type['item'] = self._parse_array_item(inner, parent_id)
+        elif simple_type == "map":
+            complex_type['key'] = self._parse_map_key(inner)
+            complex_type['value'] = self._parse_map_value(inner, parent_id)
+        elif simple_type == "struct":
+            complex_type['fields'] = self._parse_struct_fields(inner, parent_id)
+        elif simple_type == "uniontype":
+            complex_type['union'] = self._parse_union_types(inner, parent_id)
+        return complex_type
+
+    def _parse_array_item(self, inner, parent_id):
+        item = {}
+        simple_type, inner, comment = self._parse_type(inner)
+        item['type'] = simple_type
+        item['doc'] = comment
+        if inner:
+            item.update(self._parse_complex(simple_type, inner, parent_id))
+        return item
+
+    def _parse_map_key(self, inner):
+        key = {}
+        key_type = inner.split(',', 1)[0]
+        key['type'] = key_type
+        return key
+
+    def _parse_map_value(self, inner, parent_id):
+        value = {}
+        value_type = inner.split(',', 1)[1]
+        simple_type, inner, comment = self._parse_type(value_type)
+        value['type'] = simple_type
+        value['doc'] = comment
+        if inner:
+            value.update(self._parse_complex(simple_type, inner, parent_id))
+        return value
+
+    def _parse_struct_fields(self, inner, parent_id):
+        current_prefix = self.prefix
+        fields = []
+        field_tuples = self._split_struct_fields(inner)
+        for (name, value) in field_tuples:
+            field = {}
+            name = name.strip(',')
+            field['name'] = name
+            simple_type, inner, comment = self._parse_type(value)
+            field['type'] = simple_type
+            field['doc'] = comment
+            self.sort_id += 1
+            self.column_type_list.append([self.dataset_urn, self.sort_id, parent_id, self.prefix, name, simple_type, comment])
+            if inner:
+                self.prefix += '.' + name
+                field.update(self._parse_complex(simple_type, inner, self.sort_id))
+                self.prefix = current_prefix
+            fields.append(field)
+        return fields
+
+    def _split_struct_fields(self, fields_string):
+        fields = []
+        remaining = fields_string
+        while remaining:
+            (fieldname, fieldvalue), remaining = self._get_next_struct_field(remaining)
+            fields.append((fieldname, fieldvalue))
+        return fields
+
+    def _get_next_struct_field(self, fields_string):
+        fieldname, rest = fields_string.split(':', 1)
+        balanced = 0
+        for pos, char in enumerate(rest):
+            balanced += {'<': 1, '>': -1, '(': 100, ')': -100}.get(char, 0)
+            if balanced == 0 and char in ['>', ',']:
+                if rest[pos + 1:].startswith(' comment '):
+                    pattern = re.compile(r"( comment '.*?')(,[a-z_0-9]+:)?", re.IGNORECASE)
+                    match = re.search(pattern, rest[pos + 1:])
+                    cm_len = len(match.group(1))
+                    return (fieldname, rest[:pos + 1 + cm_len].strip(',')), rest[pos + 2 + cm_len:]
+                return (fieldname, rest[:pos + 1].strip(',')), rest[pos + 1:]
+        return (fieldname, rest), None
+
+    def _parse_union_types(self, inner, parent_id):
+        current_prefix = self.prefix
+        types = []
+        type_tuples = []
+        bracket_level = 0
+        current = []
+
+        for c in (inner + ","):
+            if c == "," and bracket_level == 0:
+                type_tuples.append("".join(current))
+                current = []
+            else:
+                if c == "<":
+                    bracket_level += 1
+                elif c == ">":
+                    bracket_level -= 1
+                current.append(c)
+
+
+        for pos, value in enumerate(type_tuples):
+            field = {}
+            name = 'type' + str(pos)
+            field['name'] = name
+            #print 'type' + str(pos) + "\t" + value
+            simple_type, inner, comment = self._parse_type(value)
+            field['type'] = simple_type
+            field['doc'] = comment
+            self.sort_id += 1
+            self.column_type_list.append([self.dataset_urn, self.sort_id, parent_id, self.prefix, name, simple_type, comment])
+
+            if inner:
+                self.prefix += '.' + name
+                field.update(self._parse_complex(simple_type, inner, self.sort_id))
+                self.prefix = current_prefix
+            types.append(field)
+        return types
+
 
 class HiveTransform:
   dataset_dict = {}

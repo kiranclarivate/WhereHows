@@ -65,9 +65,9 @@ public abstract class EtlJob {
   @Deprecated
   public EtlJob(Integer appId, Integer dbId, long whExecId, String configFile) {
     PySystemState sys = configFromFile(appId, dbId, whExecId, configFile);
-  addJythonToPath(sys);
-  interpreter = new PythonInterpreter(null, sys);
-}
+    addJythonToPath(sys);
+    interpreter = new PythonInterpreter(null, sys);
+  }
 
   /**
    * Used by backend service
@@ -93,7 +93,7 @@ public abstract class EtlJob {
       pySystemState.path.append(new PyString(path.replace("!", "")));
     }
 
-    pySystemState.path.add(new PyString("/opt/wherehows-backend/jython"));
+    // pySystemState.path.add(new PyString("/opt/wherehows-backend/jython"));
   }
 
   @Deprecated
