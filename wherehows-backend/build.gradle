@@ -49,6 +49,10 @@ model {
                 from("script") {
                     into "bin"
                 }
+
+                from("${projectDir}/../wherehows-etl/src/main/resources/jython"){
+                    into "jython"
+                }
             }
         }
     }
