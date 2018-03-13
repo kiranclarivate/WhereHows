@@ -43,7 +43,7 @@ public class HiveMetadataEtl extends EtlJob {
     System.setProperty("java.security.krb5.kdc", prop.getProperty(Constant.KRB5_KDC));
 
     InputStream inputStream = classLoader.getResourceAsStream("jython/HiveExtract.py");
-    logger.info("before call scripts Extract.py" + interpreter.getSystemState().argv);
+    logger.info("argv before call scripts Extract.py:" + interpreter.getSystemState().argv);
     interpreter.execfile(inputStream);
     inputStream.close();
   }
@@ -53,7 +53,7 @@ public class HiveMetadataEtl extends EtlJob {
     throws Exception {
     logger.info("In Hive metadata ETL, launch transform jython scripts");
     InputStream inputStream = classLoader.getResourceAsStream("jython/HiveTransform.py");
-    logger.info("before call scripts Transform.py" + interpreter.getSystemState().argv);
+    logger.info("argv before call scripts Transform.py:" + interpreter.getSystemState().argv);
     interpreter.execfile(inputStream);
     inputStream.close();
   }
@@ -63,7 +63,7 @@ public class HiveMetadataEtl extends EtlJob {
     throws Exception {
       logger.info("In Hive metadata ETL, launch load jython scripts");
       InputStream inputStream = classLoader.getResourceAsStream("jython/HiveLoad.py");
-      logger.info("before call scripts HiveLoad.py" + interpreter.getSystemState().argv);
+      logger.info("argv before call scripts HiveLoad.py:" + interpreter.getSystemState().argv);
       interpreter.execfile(inputStream);
       inputStream.close();
   }

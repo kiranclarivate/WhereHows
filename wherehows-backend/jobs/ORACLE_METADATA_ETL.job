@@ -33,7 +33,7 @@ oracle.field_metadata=oracle_field.csv
 oracle.sample_data=oracle_sample.csv
 
 # Whether to get sample data (True/False)
-oracle.load_sample=True
+oracle.load_sample=False
 
 # List of excluded databases in oracle
 oracle.exclude_db=
