@@ -1,6 +1,6 @@
 ext.externalDependency = [
     "mysql"               : "mysql:mysql-connector-java:5.1.40",
-    "jython"              : "org.python:jython-standalone:2.7.0",
+    "jython"              : "org.python:jython-standalone:2.7.1",
     "testng"              : "org.testng:testng:6.9.10",
     "hadoop_common"       : "org.apache.hadoop:hadoop-common:2.7.3",
     "hadoop_client"       : "org.apache.hadoop:hadoop-mapreduce-client-core:2.7.3",
