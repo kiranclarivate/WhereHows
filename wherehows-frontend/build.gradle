@@ -43,6 +43,10 @@ model {
                 from("script") {
                     into "bin"
                 }
+                from("../wherehows-data-model/ELASTICSEARCH") {
+                    into "ELASTICSEARCH"
+                }
+
             }
         }
     }
@@ -53,9 +57,6 @@ task unzipAssets(type: Copy, dependsOn: configurations.assets) {
   from {
    configurations.assets.collect{ zipTree(it) }
   }
-    from("../wherehows-data-model/ELASTICSEARCH") {
-        into "ELASTICSEARCH"
-    }
 }
 
 def nexusUsername="$System.env.ORG_GRADLE_PROJECT_nexusUsername"
