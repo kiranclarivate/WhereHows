@@ -2,30 +2,30 @@
 
 # Common ETL configs
 job.class=metadata.etl.dataset.hive.HiveMetadataEtl
-job.cron.expr=0 0 19 * * ? *
+job.cron.expr=0 0/5 * * * ?
 job.timeout=12000
 #job.cmd.params=
 #job.disabled=1
-job.ref.id=65
+job.ref.id=1
 
 # hive metastore jdbc url
-hive.metastore.jdbc.url=your_metastore_jdb_url
+hive.metastore.jdbc.url=jdbc:mysql://cc-wherehows-test.czazctzymxax.us-west-2.rds.amazonaws.com:3306/hive
 
 # hive metastore jdbc driver
 hive.metastore.jdbc.driver=com.mysql.jdbc.Driver
 
 # hive metastore user name
-hive.metastore.username=your_metastore_username
+hive.metastore.username=master
 
 # hive metastore password
-hive.metastore.password=your_metastore_password
+hive.metastore.password=clarivate800!
 
 # hive metastore DB reconnect interval
-hive.metastore.reconnect.time=your_reconnect_interval_seconds
+hive.metastore.reconnect.time=30
 
 hive.database_black_list=your_databsae_black_list
 
-hive.database_white_list=your_database_white_list
+hive.database_white_list=hive
 
 # whether to enable table level whitelisting, if enabled only tables with TBLPROPERTIES('wherehows' = 'true') will show up
 hive.table_white_list_enabled=False
@@ -52,7 +52,7 @@ hive.dependency_csv_file=/var/tmp/hive_dependency.csv
 hdfs.namenode.ipc.uri=your_namenode_ipc_uri
 
 # Enable/disable kerberos authentication & related configs
-kerberos.auth=True
+kerberos.auth=False
 kerberos.keytab.file=your_keytab_file
 kerberos.principal=your_principal
 

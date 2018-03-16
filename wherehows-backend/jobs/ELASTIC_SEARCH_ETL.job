@@ -1,0 +1,18 @@
+# Push metadata to Elastic search server
+job.class=metadata.etl.JythonEtlJob
+job.cron.expr=0 0/10 * * * ?
+job.timeout=10000
+#job.cmd.params=
+#job.disabled=1
+job.ref.id=0
+
+# Jython scripts
+job.jython.load=jython/ElasticSearchIndex.py
+
+elasticsearch.url=http://vpc-cc-wherehows-5eb6eamlpp24joe7zua7fp6jty.us-west-2.es.amazonaws.com
+elasticsearch.port=80
+elasticsearch.index=wherehows
+elasticsearch.bulk.insert.size=100
+elasticsearch.url.request.timeout=10
+wh.db.max.retry.times=3
+wh.elasticsearch.index.mapping.file=/home/wherehows/wherehow-backend/ELASTICSEARCH/index_mapping.json
