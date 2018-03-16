@@ -36,6 +36,16 @@ model {
       }
     }
   }
+
+    distributions {
+        playBinary {
+            contents {
+                from("script") {
+                    into "bin"
+                }
+            }
+        }
+    }
 }
 
 task unzipAssets(type: Copy, dependsOn: configurations.assets) {
