@@ -91,9 +91,9 @@ class HiveExtract:
     if Constant.KERBEROS_AUTH_KEY in args:
       kerberos_auth = FileUtil.parse_bool(args[Constant.KERBEROS_AUTH_KEY], False)
 
-    table_white_list_enabled = False
+    self.table_whitelist_enabled = False
     if Constant.HIVE_TABLE_WHITELIST_ENABLED in args:
-      table_white_list_enabled = FileUtil.parse_bool(args[Constant.HIVE_TABLE_WHITELIST_ENABLED], False)
+      self.table_whitelist_enabled = FileUtil.parse_bool(args[Constant.HIVE_TABLE_WHITELIST_ENABLED], False)
 
     self.schema_url_helper = SchemaUrlHelper.SchemaUrlHelper(hdfs_namenode_ipc_uri, kerberos_auth, kerberos_principal, keytab_file)
 
@@ -108,7 +108,6 @@ class HiveExtract:
     self.external_url = 0
     self.hdfs_count = 0
     self.schema_registry_count = 0
-
 
   def get_table_info_from_v2(self, database_name, is_dali=False):
     """
@@ -157,7 +156,7 @@ class HiveExtract:
         d.NAME in ('{db_name}') and (d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and d.NAME not like 'dalitest%' and t.TBL_TYPE = 'VIRTUAL_VIEW'
       order by DB_NAME, dataset_name, version DESC
       """.format(version='{version}', db_name=database_name)
-    elif self.table_white_list_enabled:
+    elif self.table_whitelist_enabled:
       tbl_info_sql = """SELECT d.NAME DB_NAME, t.TBL_NAME TBL_NAME,
         case when s.INPUT_FORMAT like '%.TextInput%' then 'Text'
           when s.INPUT_FORMAT like '%.Avro%' then 'Avro'
