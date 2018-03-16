@@ -225,6 +225,7 @@ public class Constant {
   public static final String HIVE_FIELD_METADATA_KEY = "hive.field_metadata";
 
   public static final String HIVE_TABLE_WHITELIST_ENABLED = "hive.table_white_list_enabled";
+  public static final String HIVE_TABLE_BLACKLIST_ENABLED = "hive.table_black_list_enabled";
 
   public static final String KERBEROS_AUTH_KEY = "kerberos.auth";
   public static final String KERBEROS_PRINCIPAL_KEY = "kerberos.principal";
