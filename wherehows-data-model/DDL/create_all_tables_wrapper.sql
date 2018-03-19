@@ -23,6 +23,7 @@ source ETL_DDL/lineage_metadata.sql;
 source ETL_DDL/metric_metadata.sql;
 source ETL_DDL/owner_metadata.sql;
 source ETL_DDL/patterns.sql;
+source ETL_DDL/new.sql;
 
 source ETL_DDL/dataset_info_metadata.sql;
 

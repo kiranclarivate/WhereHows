@@ -61,7 +61,7 @@ class ElasticSearchIndex():
 
             self.logger.info(url)
             self.logger.info('\n'.join(params) + '\n')
-            
+
             response = urllib2.urlopen(req, timeout=self.es_url_request_timeout)
             data = json.load(response)
             if str(data['errors']) != 'False':
