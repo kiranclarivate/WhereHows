@@ -58,8 +58,10 @@ class ElasticSearchIndex():
             req.add_header('Content-type', 'application/json')
             req.get_method = lambda: "PUT"
             req.add_data('\n'.join(params) + '\n')
+
             self.logger.info(url)
-            self.logger.info(params)
+            self.logger.info('\n'.join(params) + '\n')
+            
             response = urllib2.urlopen(req, timeout=self.es_url_request_timeout)
             data = json.load(response)
             if str(data['errors']) != 'False':
