@@ -22,3 +22,4 @@ export JAVA_OPTS="-Xms512m -Xmx2048m -Dhttp.port=19001"
 export PYTHONHOME="${APP_DIR}/jython"
 
 echo "=== starting {$CLOUD_APP} ==="
+cd ~

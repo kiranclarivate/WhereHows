@@ -14,3 +14,4 @@ set +a
 export JAVA_OPTS="-Xms512m -Xmx2048m -Dhttp.port=9000"
 
 echo "=== starting {$CLOUD_APP} ==="
+cd ~
