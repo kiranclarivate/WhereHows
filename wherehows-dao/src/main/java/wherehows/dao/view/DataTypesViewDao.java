@@ -13,6 +13,8 @@
  */
 package wherehows.dao.view;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.persistence.EntityManagerFactory;
@@ -28,7 +30,10 @@ public class DataTypesViewDao extends BaseViewDao {
    * Get all compliance dataTypes
    */
   public List<Map<String, Object>> getAllComplianceDataTypes() throws Exception {
-    throw new UnsupportedOperationException("Operation not implemented");
+    // temporarily skip "not implemented" error
+    List<Map<String, Object>> result = new ArrayList<>();
+    return result;
+    // throw new UnsupportedOperationException("Operation not implemented");
   }
 
   /**
