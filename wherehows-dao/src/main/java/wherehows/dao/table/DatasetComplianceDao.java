@@ -158,7 +158,6 @@ public class DatasetComplianceDao extends BaseDao {
   public void insertUpdateSuggestedCompliance(@Nonnull DatasetIdentifier identifier, @Nullable DictDataset dataset,
       @Nonnull ChangeAuditStamp auditStamp, @Nonnull SuggestedCompliancePolicy suggestion) throws Exception {
     // TODO: write suggested compliance information to DB
-    return null;
     //throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
   }
 
