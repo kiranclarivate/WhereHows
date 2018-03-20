@@ -8,8 +8,6 @@ GET           /                                                                 
 
 GET           /admin                                                            controllers.Application.healthcheck()
 
-GET           /deps                                                             controllers.Application.printDeps()
-
 GET           /config                                                           controllers.Application.appConfig()
 
 GET           /login                                                            controllers.Application.login()
@@ -82,19 +80,9 @@ GET           /api/v1/list/flows/:application                                   
 
 GET           /api/v1/list/flows/:application/:project                          controllers.api.v1.Flow.getFlowListViewFlows(application:String, project:String)
 
-GET           /api/v1/list/platforms                                            controllers.api.v1.Dataset.getDataPlatforms()
-
-GET           /api/v1/list/complianceDataTypes                                  controllers.api.v1.Dataset.getComplianceDataTypes()
-
 GET           /api/v1/datasets                                                  controllers.api.v1.Dataset.getPagedDatasets()
 
-HEAD          /api/v1/datasets/urntoid/:urn                                     controllers.api.v1.Dataset.getDatasetIdByUrn(urn:String)
-
 GET           /api/v1/datasets/:id                                              controllers.api.v1.Dataset.getDatasetByID(id:Int)
-
-GET           /api/v1/datasets/:id/view                                         controllers.api.v1.Dataset.getDatasetViewById(id:Int)
-
-PUT           /api/v1/datasets/:id/deprecate                                    controllers.api.v1.Dataset.updateDatasetDeprecation(id:Int)
 
 GET           /api/v1/datasets/:id/owners                                       controllers.api.v1.Dataset.getDatasetOwnersByID(id:Int)
 
@@ -154,7 +142,13 @@ GET           /api/v1/datasets/:id/compliance                                   
 
 POST          /api/v1/datasets/:id/compliance                                   controllers.api.v1.Dataset.updateDatasetCompliance(id:Int)
 
-GET           /api/v1/datasets/:id/compliance/suggestions                       controllers.api.v1.Dataset.getDatasetSuggestedCompliance(id:Int)
+GET           /api/v1/datasets/:id/security                                     controllers.api.v1.Dataset.getDatasetSecurity(id:Int)
+
+POST          /api/v1/datasets/:id/security                                     controllers.api.v1.Dataset.updateDatasetSecurity(id:Int)
+
+GET           /api/v1/datasets/:id/privacy                                      controllers.api.v1.Dataset.getDatasetPrivacy(id:Int)
+
+POST          /api/v1/datasets/:id/privacy                                      controllers.api.v1.Dataset.updateDatasetPrivacy(id:Int)
 
 GET           /api/v1/urn/watch                                                 controllers.api.v1.Dataset.getWatchedUrnId()
 
@@ -265,44 +259,6 @@ GET           /api/v1/schemaHistory/historyData/:id                             
 GET           /api/v1/jira/tickets/:managerId                                   controllers.api.v1.Jira.getJiraTickets(managerId: String)
 
 POST          /api/v1/tracking                                                  controllers.api.v1.Tracking.addTrackingEvent()
-
-GET           /api/v2/list/platforms                                            controllers.api.v2.Dataset.getDataPlatforms
-
-GET           /api/v2/list/complianceDataTypes                                  controllers.api.v2.Dataset.getComplianceDataTypes
-
-GET           /api/v2/platforms/:platform/prefix/:prefix                        controllers.api.v2.Dataset.listSegments(platform: String, prefix: String)
-
-GET           /api/v2/platforms/:platform                                       controllers.api.v2.Dataset.listSegments(platform: String, prefix = "")
-
-GET           /api/v2/platforms                                                 controllers.api.v2.Dataset.listSegments(platform = null, prefix = "")
-
-GET           /api/v2/datasets/platform/:platform/prefix/:prefix                controllers.api.v2.Dataset.listDatasets(platform: String, prefix: String)
-
-GET           /api/v2/datasets/platform/:platform                               controllers.api.v2.Dataset.listDatasets(platform: String, prefix = "")
-
-GET           /api/v2/datasets                                                  controllers.api.v2.Dataset.listDatasets(platform = null, prefix = "")
-
-GET           /api/v2/datasets/count/platform/:platform/prefix/:prefix          controllers.api.v2.Dataset.countDatasets(platform: String, prefix: String)
-
-GET           /api/v2/datasets/count/platform/:platform                         controllers.api.v2.Dataset.countDatasets(platform: String, prefix = "")
-
-GET           /api/v2/datasets/count                                            controllers.api.v2.Dataset.countDatasets(platform = null, prefix = "")
-
-GET           /api/v2/datasets/:urn                                             controllers.api.v2.Dataset.getDataset(urn: String)
-
-PUT           /api/v2/datasets/:urn/deprecate                                   controllers.api.v2.Dataset.updateDatasetDeprecation(urn: String)
-
-GET           /api/v2/datasets/:urn/schema                                      controllers.api.v2.Dataset.getDatasetSchema(urn: String)
-
-GET           /api/v2/datasets/:urn/owners                                      controllers.api.v2.Dataset.getDatasetOwners(urn: String)
-
-POST          /api/v2/datasets/:urn/owners                                      controllers.api.v2.Dataset.updateDatasetOwners(urn: String)
-
-GET           /api/v2/datasets/:urn/compliance                                  controllers.api.v2.Dataset.getDatasetCompliance(urn: String)
-
-POST          /api/v2/datasets/:urn/compliance                                  controllers.api.v2.Dataset.updateDatasetCompliance(urn: String)
-
-GET           /api/v2/datasets/:urn/complianceSuggestion                        controllers.api.v2.Dataset.getDatasetSuggestedCompliance(urn: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file                                                     controllers.Assets.at(path="/public", file)
