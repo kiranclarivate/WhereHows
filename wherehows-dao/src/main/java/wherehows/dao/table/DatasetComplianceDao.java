@@ -137,12 +137,14 @@ public class DatasetComplianceDao extends BaseDao {
 
   @Nullable
   public DsComplianceSuggestion findComplianceSuggestionByUrn(@Nonnull String datasetUrn) throws Exception {
-    throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
+    return null;
+    //throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
   }
 
   @Nullable
   public DsComplianceSuggestion getComplianceSuggestion(@Nonnull String datasetUrn) throws Exception {
-    throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
+    return null;
+    //throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
   }
 
   /**
@@ -156,7 +158,8 @@ public class DatasetComplianceDao extends BaseDao {
   public void insertUpdateSuggestedCompliance(@Nonnull DatasetIdentifier identifier, @Nullable DictDataset dataset,
       @Nonnull ChangeAuditStamp auditStamp, @Nonnull SuggestedCompliancePolicy suggestion) throws Exception {
     // TODO: write suggested compliance information to DB
-    throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
+    return null;
+    //throw new UnsupportedOperationException("Compliance Suggestion not implemented.");
   }
 
   /**
