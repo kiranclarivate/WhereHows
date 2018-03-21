@@ -114,6 +114,7 @@ public class Dataset extends Controller {
 
   public static Result getDatasetByID(int id) {
     String username = session("user");
+    Logger.info("getDatasetByID user-name=" + username);
     wherehows.models.table.Dataset dataset = DatasetsDAO.getDatasetByID(id, username);
 
     ObjectNode result = Json.newObject();

@@ -40,6 +40,8 @@ public class DataTypesViewDao extends BaseViewDao {
    * Get all data platforms
    */
   public List<Map<String, Object>> getAllPlatforms() throws Exception {
-    throw new UnsupportedOperationException("Operation not implemented");
+    List<Map<String, Object>> result = new ArrayList<>();
+    return result;
+    //throw new UnsupportedOperationException("Operation not implemented");
   }
 }
