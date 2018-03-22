@@ -58,3 +58,15 @@ PARTITION BY RANGE COLUMNS (data_time_epoch)
     PARTITION P201912 VALUES LESS THAN (unix_timestamp(date'2020-01-01')),
   	PARTITION P203507 VALUES LESS THAN (unix_timestamp(date'2035-08-01'))
 ) ;
+
+
+
+CREATE TABLE dataset_classification (
+	dataset_id int(10) unsigned NOT NULL,
+	dataset_urn varchar(200) NOT NULL,
+	classification_result varchar(200) DEFAULT NULL,
+	last_modified DATE      DEFAULT NULL,
+	PRIMARY KEY(dataset_id),
+	UNIQUE KEY(dataset_urn)
+)ENGINE = InnoDB
+  DEFAULT CHARSET = latin1;
