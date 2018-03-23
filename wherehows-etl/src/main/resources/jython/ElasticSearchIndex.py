@@ -117,7 +117,8 @@ class ElasticSearchIndex():
                         'dataset_id': row['dataset_id'],
                         'sort_id': row['sort_id'],
                         'field_name': row['field_name'],
-                        'parent_path': row['parent_path']
+                        'parent_path': row['parent_path'],
+                        'db_id': row['db_id']
                     }
                     params.append(json.dumps(comments_detail))
 
