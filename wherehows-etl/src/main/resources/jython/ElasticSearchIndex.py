@@ -91,6 +91,8 @@ class ElasticSearchIndex():
         """
         url = self.elasticsearch_server_url + ':' + str(
             self.elasticsearch_port) + '/' + self.new_index + '/field/_bulk'
+
+
         params = []
         attempts = 0
         while attempts < self.max_retry_times:
@@ -284,7 +286,8 @@ class ElasticSearchIndex():
                 'schema': row['schema'],
                 'fields': row['fields'],
                 'static_boosting_score': row['static_boosting_score'],
-                'name_suggest': name_suggest_info
+                'name_suggest': name_suggest_info,
+                'db_id': row['db_id']
             }
 
             params.append('{ "index": { "_id": ' + str(row['id']) + ' }}')
