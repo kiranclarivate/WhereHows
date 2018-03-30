@@ -154,7 +154,7 @@ CREATE TABLE `dataset_compliance` (
   `modified_time` int(10) unsigned DEFAULT NULL COMMENT 'the modified time in epoch',
   PRIMARY KEY (`dataset_id`),
   UNIQUE KEY `dataset_urn` (`dataset_urn`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
 CREATE TABLE dataset_constraint (

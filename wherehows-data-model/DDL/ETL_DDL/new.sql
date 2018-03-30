@@ -49,10 +49,11 @@ DEFAULT CHARSET = latin1;
 
 CREATE TABLE db_info (
     db_id SMALLINT UNSIGNED NOT NULL,
-    type VARCHAR(50)   COMMENT 'Hive, Oracle, MySQL, Teradata etc...' NOT NULL,
+    type VARCHAR(50)   COMMENT 'hive, oracle, mySQL, teradata etc...' NOT NULL,
     alias VARCHAR(10) COMMENT 'optional, will be used as part of notebook name' NULL,
     zeppelin_host VARCHAR(100)  NOT NULL,
     interpreter_name varchar(20) NOT NULL COMMENT 'used at the beginning of each paragraph such as %mysql',
+    database_name VARCHAR(50),
     last_modified     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (db_id),
     UNIQUE KEY(alias)
