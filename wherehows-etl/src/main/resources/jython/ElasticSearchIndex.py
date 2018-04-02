@@ -58,10 +58,7 @@ class ElasticSearchIndex():
             req.add_header('Content-type', 'application/json')
             req.get_method = lambda: "PUT"
             req.add_data('\n'.join(params) + '\n')
-
             self.logger.info(url)
-            self.logger.info('\n'.join(params) + '\n')
-
             response = urllib2.urlopen(req, timeout=self.es_url_request_timeout)
             data = json.load(response)
             if str(data['errors']) != 'False':
@@ -75,14 +72,11 @@ class ElasticSearchIndex():
     def update_dataset_field(self, last_time=None):
         if last_time:
             sql = """
-            SELECT fd.*, d.db_id FROM dict_field_detail fd 
-            INNER JOIN dict_dataset d ON fd.dataset_id = d.id 
-            WHERE fd.modified >= DATE_SUB(%s, INTERVAL 1 HOUR)
+            SELECT * FROM dict_field_detail WHERE modified >= DATE_SUB(%s, INTERVAL 1 HOUR)
             """ % last_time
         else:
             sql = """
-            SELECT fd.*, d.db_id FROM dict_field_detail fd 
-            INNER JOIN dict_dataset d ON fd.dataset_id = d.id
+            SELECT * FROM dict_field_detail
           """
 
         comment_query = """
@@ -91,8 +85,6 @@ class ElasticSearchIndex():
         """
         url = self.elasticsearch_server_url + ':' + str(
             self.elasticsearch_port) + '/' + self.new_index + '/field/_bulk'
-
-
         params = []
         attempts = 0
         while attempts < self.max_retry_times:
@@ -119,8 +111,7 @@ class ElasticSearchIndex():
                         'dataset_id': row['dataset_id'],
                         'sort_id': row['sort_id'],
                         'field_name': row['field_name'],
-                        'parent_path': row['parent_path'],
-                        'db_id': row['db_id']
+                        'parent_path': row['parent_path']
                     }
                     params.append(json.dumps(comments_detail))
 
@@ -286,8 +277,7 @@ class ElasticSearchIndex():
                 'schema': row['schema'],
                 'fields': row['fields'],
                 'static_boosting_score': row['static_boosting_score'],
-                'name_suggest': name_suggest_info,
-                'db_id': row['db_id']
+                'name_suggest': name_suggest_info
             }
 
             params.append('{ "index": { "_id": ' + str(row['id']) + ' }}')
