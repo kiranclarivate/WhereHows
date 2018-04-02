@@ -204,7 +204,7 @@ public class SearchDAO extends AbstractMySQLOpenSourceDAO
       Logger.error("Elastic search completion suggester error. Error message :" + e.getMessage());
     }
 
-		Logger.info("The completion suggester query sent to Elastic Search was: " + keywordNode.toString());
+		Logger.info("*The completion suggester query sent to Elastic Search was: " + keywordNode.toString());
 
     Promise<WSResponse> responsePromise =
         WS.url(Play.application().configuration().getString(elasticSearchTypeURLKey)).post(keywordNode);
