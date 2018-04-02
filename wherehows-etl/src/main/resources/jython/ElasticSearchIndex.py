@@ -72,11 +72,14 @@ class ElasticSearchIndex():
     def update_dataset_field(self, last_time=None):
         if last_time:
             sql = """
-            SELECT * FROM dict_field_detail WHERE modified >= DATE_SUB(%s, INTERVAL 1 HOUR)
+            SELECT fd.*, d.db_id FROM dict_field_detail fd
+            INNER JOIN dict_dataset d ON fd.dataset_id = d.id 
+            WHERE fd.modified >= DATE_SUB(%s, INTERVAL 1 HOUR)
             """ % last_time
         else:
             sql = """
-            SELECT * FROM dict_field_detail
+            SELECT fd.*, d.db_id FROM dict_field_detail fd
+            INNER JOIN dict_dataset d ON fd.dataset_id = d.id
           """
 
         comment_query = """
@@ -277,7 +280,8 @@ class ElasticSearchIndex():
                 'schema': row['schema'],
                 'fields': row['fields'],
                 'static_boosting_score': row['static_boosting_score'],
-                'name_suggest': name_suggest_info
+                'name_suggest': name_suggest_info,
+                'db_id': row['db_id']
             }
 
             params.append('{ "index": { "_id": ' + str(row['id']) + ' }}')
