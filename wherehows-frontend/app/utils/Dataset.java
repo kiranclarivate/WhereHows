@@ -17,24 +17,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.cache.Cache;
-import wherehows.models.table.User;
 
 
 public class Dataset {
-
-  private Dataset() {
-  }
-
   public static final String URNIDMAPKey = "impactUrnIDMap";
   private static Cache currentCache = null;
 
@@ -98,51 +89,5 @@ public class Dataset {
       Logger.error(e.getMessage());
     }
     return impacts;
-  }
-
-  public static List<User> fillDatasetOwnerList(String[] owners, String[] ownerNames, String[] ownerEmails) {
-    List<User> users = new ArrayList<>();
-
-    if (owners != null && ownerNames != null && ownerEmails != null && owners.length == ownerNames.length
-        && owners.length == ownerEmails.length) {
-      for (int i = 0; i < owners.length; i++) {
-        User user = new User();
-        user.setUserName(owners[i]);
-        user.setName(ownerNames[i]);
-        user.setEmail(ownerEmails[i]);
-        users.add(user);
-      }
-    }
-    return users;
-  }
-
-  /**
-   * Generate prefix for dataset name segment search. Append '.' or '/' according to platform.
-   * @param platform String
-   * @param name original prefix name
-   * @return prefix to be used in next listNames
-   */
-  public static String getPlatformPrefix(@Nonnull String platform, @Nullable String name) {
-    String delim = "HDFS".equalsIgnoreCase(platform) ? "/" : ".";
-
-    if (StringUtils.isBlank(name)) {
-      return "HDFS".equalsIgnoreCase(platform) ? "/" : "";
-    }
-    if (!name.endsWith(delim)) {
-      return name + delim;
-    }
-    return name;
-  }
-
-  /**
-   * Check if the prefix is dataset name or not (segment)
-   */
-  public static boolean listNamePrefixIsDataset(@Nonnull String platform, @Nullable String prefix) {
-    if (StringUtils.isBlank(prefix)) {
-      return false;
-    }
-
-    String delim = "HDFS".equalsIgnoreCase(platform) ? "/" : ".";
-    return !prefix.endsWith(delim);
   }
 }

@@ -18,8 +18,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.List;
-import java.nio.file.Paths;
-import java.nio.file.Files;
 import org.apache.commons.lang3.StringUtils;
 import play.Logger;
 import play.libs.Json;
@@ -31,29 +29,62 @@ public class Search {
   public final static String COMMENT_CATEGORY = "comments";
   public final static String FLOW_CATEGORY = "flows";
   public final static String JOB_CATEGORY = "jobs";
-
-  private static final String WHZ_ELASTICSEARCH_DATASET_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_DATASET_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_METRIC_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_METRIC_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_FLOW_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_FLOW_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_COMMENT_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_COMMENT_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_SUGGESTER_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_SUGGESTER_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_AUTO_COMPLETION_QUERY_FILE = System.getenv("WHZ_ELASTICSEARCH_AUTO_COMPLETION_QUERY_TEMPLATE");
-  private static final String WHZ_ELASTICSEARCH_FILTER_UNIT_FILE = System.getenv("WHZ_ELASTICSEARCH_FILTER_UNIT");
-
-  public static String readJsonQueryFile(String jsonFile) {
-    try {
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      String contents = new String(Files.readAllBytes(Paths.get(jsonFile)));
-      JsonNode json = objectMapper.readTree(contents);
-      return json.toString();
-
-    } catch (Exception e) {
-      Logger.error("ReadJsonQueryFile failed. Error: " + e.getMessage());
-      e.printStackTrace();
-      return null;
-    }
-  }
+  private final static String datasetShouldQueryUnit =
+      "{\"bool\": " + "{\"should\": [" + "{\"wildcard\": {\"name\": {\"value\": \"*$VALUE*\", \"boost\": 16}}}, "
+          + "{\"prefix\": {\"name\": {\"value\": \"$VALUE\", \"boost\": 32}}}, "
+          + "{\"match\": {\"name\": {\"query\": \"$VALUE\", \"boost\": 48}}}, "
+          + "{\"match\": {\"name\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 64}}}, "
+          + "{\"wildcard\": {\"urn\": {\"value\": \"*$VALUE*\", \"boost\": 16}}}, "
+          + "{\"prefix\": {\"urn\": {\"value\": \"$VALUE\", \"boost\": 32}}}, "
+          + "{\"match\": {\"urn\": {\"query\": \"$VALUE\", \"boost\": 48}}}, "
+          + "{\"match\": {\"urn\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 64}}}, "
+          + "{\"wildcard\": {\"field\": {\"value\": \"*$VALUE*\", \"boost\": 4}}}, "
+          + "{\"wildcard\": {\"properties\": {\"value\": \"*$VALUE*\", \"boost\": 2}}}, "
+          + "{\"wildcard\": {\"schema\": {\"value\": \"*$VALUE*\", \"boost\": 1}}}" + "]}" + "}";
+  private final static String metricShouldQueryUnit =
+      "{\"bool\": " + "{\"should\": [" + "{\"wildcard\": {\"metric_name\": {\"value\": \"*$VALUE*\", \"boost\": 32}}}, "
+          + "{\"prefix\": {\"metric_name\": {\"value\": \"$VALUE\", \"boost\": 36}}}, "
+          + "{\"match\": {\"metric_name\": {\"query\": \"$VALUE\", \"boost\": 48}}}, "
+          + "{\"match\": {\"metric_name\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 64}}}, "
+          + "{\"wildcard\": {\"dashboard_name\": {\"value\": \"*$VALUE*\", \"boost\": 20}}},"
+          + "{\"prefix\": {\"dashboard_name\": {\"value\": \"$VALUE\", \"boost\": 24}}}, "
+          + "{\"match\": {\"dashboard_name\": {\"query\": \"$VALUE\", \"boost\": 26}}}, "
+          + "{\"match\": {\"dashboard_name\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 28}}}, "
+          + "{\"wildcard\": {\"metric_group\": {\"value\": \"*$VALUE*\", \"boost\": 8}}}, "
+          + "{\"prefix\": {\"metric_group\": {\"value\": \"$VALUE\", \"boost\": 12}}}, "
+          + "{\"match\": {\"metric_group\": {\"query\": \"$VALUE\", \"boost\": 14}}}, "
+          + "{\"match\": {\"metric_group\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 16}}}, "
+          + "{\"wildcard\": {\"metric_category\": {\"value\": \"*$VALUE*\", \"boost\": 1}}}, "
+          + "{\"prefix\": {\"metric_category\": {\"value\": \"$VALUE\", \"boost\": 2}}}, "
+          + "{\"match\": {\"metric_category\": {\"query\": \"$VALUE\", \"boost\": 3}}}, "
+          + "{\"match\": {\"metric_category\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 4}}}" + "]"
+          + "}" + "}";
+  private final static String commentsQuery = "{\"bool\":" + "{ \"should\": ["
+      + "{\"has_child\": {\"type\": \"comment\", \"query\": {\"match\" : {\"text\" : \"$VALUE\"}}}}, "
+      + "{\"has_child\": {\"type\": \"field\", \"query\": {\"match\": {\"comments\" : \"$VALUE\" }}}}" + "]" + "}"
+      + "}";
+  private final static String flowShouldQueryUnit =
+      "{\"bool\": " + "{\"should\": " + "[{\"wildcard\": {\"app_code\": {\"value\": \"*$VALUE*\", \"boost\": 1}}}, "
+          + "{\"prefix\": {\"app_code\": {\"value\": \"$VALUE\", \"boost\": 2}}}, "
+          + "{\"match\": {\"app_code\": {\"query\": \"$VALUE\", \"boost\": 3}}}, "
+          + "{\"match\": {\"app_code\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 4}}}, "
+          + "{\"wildcard\": {\"flow_name\": {\"value\": \"*$VALUE*\", \"boost\": 8}}}, "
+          + "{\"prefix\": {\"flow_name\": {\"value\": \"$VALUE\", \"boost\": 16}}}, "
+          + "{\"match\": {\"flow_name\": {\"query\": \"$VALUE\", \"boost\": 24}}}, "
+          + "{\"match\": {\"flow_name\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 32}}}, "
+          + "{\"wildcard\": {\"jobs.job_name\": {\"value\": \"*$VALUE*\", \"boost\": 8}}}, "
+          + "{\"prefix\": {\"jobs.job_name\": {\"value\": \"$VALUE\", \"boost\": 16}}}, "
+          + "{\"match\": {\"jobs.job_name\": {\"query\": \"$VALUE\", \"boost\": 24}}}, "
+          + "{\"match\": {\"jobs.job_name\": {\"query\": \"$VALUE\", \"type\": \"phrase\", \"boost\": 32}}}" + "]" + "}"
+          + "}";
+  private final static String suggesterQueryTemplateSub =
+      "{" + "\"text\": \"$SEARCHKEYWORD\", " + "\"simple_phrase\": { " + "\"phrase\": { " + "\"field\": \"$FIELD\", "
+          + "\"size\": 1, " + "\"direct_generator\": [ " + "{ " + "\"field\": \"$FIELD\", "
+          + "\"suggest_mode\": \"always\", " + "\"min_word_length\": 1 " + "}" + "]" + "}" + "}" + "}";
+  private final static String completionSuggesterQuery =
+      "{" + "\"wh-suggest\": { " + "\"text\": \"$SEARCHKEYWORD\", " + "\"completion\": { " + "\"field\": \"$FIELD\", "
+          + "\"size\": $LIMIT " + "} " + "} " + "}";
+  private final static String datasetFilterQueryUnit = "{" + "\"match\": { " + "\"source\": \"$SOURCE\" " + "} " + "}";
 
   public static ObjectNode generateElasticSearchCompletionSuggesterQuery(String field, String searchKeyword,
       int limit) {
@@ -61,7 +92,7 @@ public class Search {
       return null;
     }
 
-    String queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_AUTO_COMPLETION_QUERY_FILE);
+    String queryTemplate = completionSuggesterQuery;
     String query = queryTemplate.replace("$SEARCHKEYWORD", searchKeyword.toLowerCase());
 
     if (StringUtils.isNotBlank(field)) {
@@ -79,7 +110,6 @@ public class Search {
       Logger.error("suggest Exception = " + e.getMessage());
     }
 
-    Logger.info("completionSuggesterQuery suggestNode is " + suggestNode.toString());
     return suggestNode;
   }
 
@@ -89,7 +119,7 @@ public class Search {
       return null;
     }
 
-    String queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_SUGGESTER_QUERY_FILE);
+    String queryTemplate = suggesterQueryTemplateSub;
     String query = queryTemplate.replace("$SEARCHKEYWORD", searchKeyword.toLowerCase());
 
     if (StringUtils.isNotBlank(field)) {
@@ -115,16 +145,15 @@ public class Search {
 
     List<JsonNode> shouldValueList = new ArrayList<JsonNode>();
 
-    String queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_DATASET_QUERY_FILE);
-
+    String queryTemplate = datasetShouldQueryUnit;
     String[] values = keywords.trim().split(",");
     if (StringUtils.isNotBlank(category)) {
       if (category.equalsIgnoreCase(METRIC_CATEGORY)) {
-        queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_METRIC_QUERY_FILE);;
+        queryTemplate = metricShouldQueryUnit;
       } else if (category.equalsIgnoreCase(COMMENT_CATEGORY)) {
-        queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_COMMENT_QUERY_FILE);
+        queryTemplate = commentsQuery;
       } else if (category.equalsIgnoreCase(FLOW_CATEGORY) || category.equalsIgnoreCase(JOB_CATEGORY)) {
-        queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_FLOW_QUERY_FILE);
+        queryTemplate = flowShouldQueryUnit;
       }
     }
 
@@ -139,7 +168,6 @@ public class Search {
     shouldNode.set("should", Json.toJson(shouldValueList));
     ObjectNode queryNode = Json.newObject();
     queryNode.put("bool", shouldNode);
-    
     return queryNode;
   }
 
@@ -1021,7 +1049,7 @@ public class Search {
 
     List<JsonNode> shouldValueList = new ArrayList<JsonNode>();
 
-    String queryTemplate = readJsonQueryFile(WHZ_ELASTICSEARCH_FILTER_UNIT_FILE);
+    String queryTemplate = datasetFilterQueryUnit;
     String[] values = sources.trim().split(",");
 
     for (String value : values) {

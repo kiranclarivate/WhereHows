@@ -13,66 +13,63 @@
  */
 package controllers.api.v1;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import controllers.Application;
 import dao.AbstractMySQLOpenSourceDAO;
 import dao.DatasetsDAO;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import play.Logger;
 import play.cache.Cache;
 import play.libs.F.Promise;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
-import wherehows.dao.table.DatasetComplianceDao;
+import wherehows.dao.table.DatasetClassificationDao;
 import wherehows.dao.table.DatasetsDao;
-import wherehows.dao.table.DictDatasetDao;
-import wherehows.dao.view.DataTypesViewDao;
 import wherehows.dao.view.DatasetViewDao;
 import wherehows.dao.view.OwnerViewDao;
-import wherehows.models.table.DatasetDependency;
-import wherehows.models.table.ImpactDataset;
+import wherehows.models.table.DatasetClassification;
 import wherehows.models.view.DatasetColumn;
-import wherehows.models.view.DatasetCompliance;
+import wherehows.models.table.DatasetCompliance;
+import wherehows.models.table.DatasetDependency;
 import wherehows.models.view.DatasetOwner;
-import wherehows.models.view.DatasetSchema;
-import wherehows.models.view.DatasetView;
-import wherehows.models.view.DsComplianceSuggestion;
+import wherehows.models.table.ImpactDataset;
 
 
 public class Dataset extends Controller {
   private static final JdbcTemplate JDBC_TEMPLATE = AbstractMySQLOpenSourceDAO.getJdbcTemplate();
 
+  private static final NamedParameterJdbcTemplate NAMED_JDBC_TEMPLATE =
+      AbstractMySQLOpenSourceDAO.getNamedParameterJdbcTemplate();
+
   private static final DatasetsDao DATASETS_DAO = Application.DAO_FACTORY.getDatasetsDao();
 
-  private static final DictDatasetDao DICT_DATASET_DAO = Application.DAO_FACTORY.getDictDatasetDao();
+  private static final DatasetClassificationDao CLASSIFICATION_DAO =
+      Application.DAO_FACTORY.getDatasetClassificationDao();
 
   private static final DatasetViewDao DATASET_VIEW_DAO = Application.DAO_FACTORY.getDatasetViewDao();
 
   private static final OwnerViewDao OWNER_VIEW_DAO = Application.DAO_FACTORY.getOwnerViewDao();
 
-  private static final DatasetComplianceDao COMPLIANCE_DAO = Application.DAO_FACTORY.getDatasetComplianceDao();
-
-  private static final DataTypesViewDao DATA_TYPES_DAO = Application.DAO_FACTORY.getDataTypesViewDao();
-
   private static final String URN_CACHE_KEY = "wh.urn.cache.";
   private static final int URN_CACHE_PERIOD = 24 * 3600; // cache for 24 hours
-
-  private static final String DATASET_ID_CACHE_KEY = "wh.dsid.cache.";
-  private static final int DATASET_ID_CACHE_PERIOD = 24 * 3600; // cache for 24 hours
 
   public static Result getDatasetOwnerTypes() {
     ObjectNode result = Json.newObject();
 
     result.put("status", "ok");
-    result.set("ownerTypes", Json.toJson(DATASETS_DAO.getDatasetOwnerTypes(JDBC_TEMPLATE)));
+    result.set("ownerTypes", Json.toJson(DatasetsDAO.getDatasetOwnerTypes()));
     return ok(result);
   }
 
@@ -114,7 +111,6 @@ public class Dataset extends Controller {
 
   public static Result getDatasetByID(int id) {
     String username = session("user");
-    Logger.info("getDatasetByID user-name=" + username);
     wherehows.models.table.Dataset dataset = DatasetsDAO.getDatasetByID(id, username);
 
     ObjectNode result = Json.newObject();
@@ -130,102 +126,23 @@ public class Dataset extends Controller {
     return ok(result);
   }
 
-  public static Promise<Result> getDatasetViewById(int datasetId) {
-    DatasetView view = null;
-    try {
-      String urn = getDatasetUrnByIdOrCache(datasetId);
-
-      view = DATASET_VIEW_DAO.getDatasetView(datasetId, urn);
-    } catch (Exception e) {
-      Logger.warn("Failed to get dataset view", e);
-      JsonNode result = Json.newObject()
-          .put("status", "failed")
-          .put("error", "true")
-          .put("msg", "Fetch data Error: " + e.getMessage());
-
-      return Promise.promise(() -> ok(result));
-    }
-
-    if (view == null) {
-      JsonNode result = Json.newObject().put("status", "failed").put("msg", "Not found");
-      return Promise.promise(() -> ok(result));
-    }
-
-    JsonNode result = Json.newObject().put("status", "ok").set("dataset", Json.toJson(view));
-    return Promise.promise(() -> ok(result));
-  }
-
-  public static Promise<Result> updateDatasetDeprecation(int datasetId) {
-    String username = session("user");
-    if (StringUtils.isBlank(username)) {
-      JsonNode result = Json.newObject().put("status", "failed").put("error", "true").put("msg", "Unauthorized User.");
-
-      return Promise.promise(() -> ok(result));
-    }
-
-    try {
-      JsonNode record = request().body().asJson();
-
-      boolean deprecated = record.get("deprecated").asBoolean();
-
-      String deprecationNote = record.has("deprecationNote") ? record.get("deprecationNote").asText() : null;
-
-      String urn = getDatasetUrnByIdOrCache(datasetId);
-
-      DICT_DATASET_DAO.setDatasetDeprecation(datasetId, urn, deprecated, deprecationNote, username);
-    } catch (Exception e) {
-      JsonNode result = Json.newObject()
-          .put("status", "failed")
-          .put("error", "true")
-          .put("msg", "Update Compliance Info Error: " + e.getMessage());
-
-      Logger.warn("Update dataset deprecation info fail", e);
-
-      return Promise.promise(() -> ok(result));
-    }
-
-    return Promise.promise(() -> ok(Json.newObject().put("status", "ok")));
-  }
-
-  private static Integer getDatasetIdByUrnOrCache(String urn) {
+  public static Result getDatasetIdByUrn(String urn) {
     String cacheKey = URN_CACHE_KEY + urn;
 
     Integer datasetId = (Integer) Cache.get(cacheKey);
     if (datasetId != null && datasetId > 0) {
-      return datasetId;
+      response().setHeader("DatasetId", datasetId.toString());
+      return ok();
     }
 
     datasetId = DATASETS_DAO.getDatasetIdByUrn(JDBC_TEMPLATE, urn);
     if (datasetId > 0) {
       Cache.set(cacheKey, datasetId, URN_CACHE_PERIOD);
-    }
-    return datasetId;
-  }
-
-  public static Result getDatasetIdByUrn(String urn) {
-    Integer datasetId = getDatasetIdByUrnOrCache(urn);
-
-    if (datasetId > 0) {
-      response().setHeader("datasetid", datasetId.toString());
+      response().setHeader("DatasetId", datasetId.toString());
       return ok();
     } else {
       return notFound();
     }
-  }
-
-  private static String getDatasetUrnByIdOrCache(int datasetId) {
-    String cacheKey = DATASET_ID_CACHE_KEY + datasetId;
-
-    String urn = (String) Cache.get(cacheKey);
-    if (urn != null && urn.length() > 0) {
-      return urn;
-    }
-
-    urn = DATASETS_DAO.validateUrn(JDBC_TEMPLATE, datasetId);
-    if (urn != null) {
-      Cache.set(cacheKey, urn, DATASET_ID_CACHE_PERIOD);
-    }
-    return urn;
   }
 
   public static Result getDatasetColumnByID(int datasetId, int columnId) {
@@ -244,16 +161,15 @@ public class Dataset extends Controller {
   }
 
   public static Result getDatasetColumnsByID(int id) {
-    String urn = getDatasetUrnByIdOrCache(id);
+    String urn = DATASETS_DAO.validateUrn(JDBC_TEMPLATE, id);
 
-    DatasetSchema schema = DATASET_VIEW_DAO.getDatasetColumnsByID(id, urn);
+    List<DatasetColumn> columns = DATASET_VIEW_DAO.getDatasetColumnsByID(id, urn);
 
     ObjectNode result = Json.newObject();
 
-    if (schema != null) {
+    if (columns != null && columns.size() > 0) {
       result.put("status", "ok");
-      result.put("schemaless", schema.getSchemaless());
-      result.set("columns", Json.toJson(schema.getColumns()));
+      result.set("columns", Json.toJson(columns));
     } else {
       result.put("status", "error");
       result.put("message", "record not found");
@@ -309,31 +225,21 @@ public class Dataset extends Controller {
     return ok(result);
   }
 
-  public static Promise<Result> getDatasetOwnersByID(int id) {
-    List<DatasetOwner> owners = null;
+  public static Result getDatasetOwnersByID(int id) {
+    ObjectNode result = Json.newObject();
+
     try {
-      String urn = getDatasetUrnByIdOrCache(id);
+      String urn = DATASETS_DAO.validateUrn(JDBC_TEMPLATE, id);
 
-      owners = OWNER_VIEW_DAO.getDatasetOwnersByUrn(urn);
+      result.set("owners", Json.toJson(OWNER_VIEW_DAO.getDatasetOwnersByUrn(urn)));
+      result.put("status", "ok");
     } catch (Exception e) {
-      if (e.toString().contains("Response status 404")) {
-        JsonNode result = Json.newObject().put("status", "ok").set("owners", Json.newArray());
-        return Promise.promise(() -> ok(result));
-      }
-
-      Logger.error("Fetch owners Error: ", e);
-      JsonNode result =
-          Json.newObject().put("status", "failed").put("error", "true").put("msg", "Fetch data Error: " + e.toString());
-      return Promise.promise(() -> ok(result));
+      Logger.warn("Failed to get owners: " + e.toString());
+      result.put("status", "failed");
+      result.put("message", "Error: " + e.getMessage());
     }
 
-    if (owners == null) {
-      JsonNode result = Json.newObject().put("status", "ok").set("owners", Json.newArray());
-      return Promise.promise(() -> ok(result));
-    }
-
-    JsonNode result = Json.newObject().put("status", "ok").set("owners", Json.toJson(owners));
-    return Promise.promise(() -> ok(result));
+    return ok(result);
   }
 
   public static Result updateDatasetOwners(int id) {
@@ -347,23 +253,24 @@ public class Dataset extends Controller {
       return ok(result);
     }
 
-    String urn = getDatasetUrnByIdOrCache(id);
+    String urn = DATASETS_DAO.validateUrn(JDBC_TEMPLATE, id);
 
-    JsonNode content = request().body().asJson();
-    // content should contain arraynode 'owners': []
-    if (content == null || !content.has("owners") || !content.get("owners").isArray()) {
+    Map<String, String[]> params = request().body().asFormUrlEncoded();
+    // params should contain mapping 'owners': ['ownerInfoJsonString']
+    if (params == null || !params.containsKey("owners") || params.get("owners") == null
+        || params.get("owners").length == 0) {
       result.put("status", "failed");
       result.put("error", "true");
-      result.put("msg", "Could not update dataset owners: missing owners field");
+      result.put("msg", "Could not update dataset owners: missing fields");
       return ok(result);
     }
-    final JsonNode ownerArray = content.get("owners");
+    final JsonNode node = Json.parse(params.get("owners")[0]);
 
     final List<DatasetOwner> owners = new ArrayList<>();
     int confirmedOwnerUserCount = 0;
 
-    for (int i = 0; i < ownerArray.size(); i++) {
-      final JsonNode ownerNode = ownerArray.get(i);
+    for (int i = 0; i < node.size(); i++) {
+      final JsonNode ownerNode = node.get(i);
       if (ownerNode != null) {
         String userName = ownerNode.has("userName") ? ownerNode.get("userName").asText() : "";
         if (StringUtils.isBlank(userName)) {
@@ -877,56 +784,22 @@ public class Dataset extends Controller {
     return ok(result);
   }
 
-  public static Promise<Result> getComplianceDataTypes() {
-    ObjectNode result = Json.newObject();
-    try {
-      result.set("complianceDataTypes", Json.toJson(DATA_TYPES_DAO.getAllComplianceDataTypes()));
-      result.put("status", "ok");
-    } catch (Exception e) {
-      Logger.error("Fail to get compliance data types", e);
-      result.put("status", "failed").put("error", "true").put("msg", "Fetch data Error: " + e.toString());
-    }
-    return Promise.promise(() -> ok(result));
-  }
-
-  public static Promise<Result> getDataPlatforms() {
-    ObjectNode result = Json.newObject();
-    try {
-      result.set("platforms", Json.toJson(DATA_TYPES_DAO.getAllPlatforms()));
-      result.put("status", "ok");
-    } catch (Exception e) {
-      Logger.error("Fail to get data platforms", e);
-      result.put("status", "failed").put("error", "true").put("msg", "Fetch data Error: " + e.toString());
-    }
-    return Promise.promise(() -> ok(result));
-  }
-
   public static Promise<Result> getDatasetCompliance(int datasetId) {
     DatasetCompliance record = null;
     try {
-      String urn = getDatasetUrnByIdOrCache(datasetId);
-
-      record = COMPLIANCE_DAO.getDatasetComplianceByDatasetId(datasetId, urn);
+      record = DATASETS_DAO.getDatasetComplianceInfoByDatasetId(JDBC_TEMPLATE, datasetId);
     } catch (Exception e) {
-      if (e.toString().contains("Response status 404")) {
-        JsonNode result =
-            Json.newObject().put("status", "failed").put("error", "true").put("msg", "No entity found for query");
-        return Promise.promise(() -> ok(result));
-      }
+      Logger.warn("Failed to get compliance: " + e.toString());
+      JsonNode result = Json.newObject()
+          .put("status", "failed")
+          .put("error", "true")
+          .put("msg", "Fetch data Error: " + e.getMessage());
 
-      Logger.error("Fetch compliance Error: ", e);
-      JsonNode result =
-          Json.newObject().put("status", "failed").put("error", "true").put("msg", "Fetch data Error: " + e.toString());
-      return Promise.promise(() -> ok(result));
-    }
-
-    if (record == null) {
-      JsonNode result =
-          Json.newObject().put("status", "failed").put("error", "true").put("msg", "No entity found for query");
       return Promise.promise(() -> ok(result));
     }
 
     JsonNode result = Json.newObject().put("status", "ok").set("complianceInfo", Json.toJson(record));
+
     return Promise.promise(() -> ok(result));
   }
 
@@ -947,10 +820,10 @@ public class Dataset extends Controller {
       record.setDatasetId(datasetId);
 
       if (record.getDatasetUrn() == null) {
-        record.setDatasetUrn(getDatasetUrnByIdOrCache(datasetId));
+        record.setDatasetUrn(DATASETS_DAO.validateUrn(JDBC_TEMPLATE, datasetId));
       }
 
-      COMPLIANCE_DAO.updateDatasetCompliance(record, username);
+      DATASETS_DAO.updateDatasetComplianceInfo(NAMED_JDBC_TEMPLATE, record, username);
     } catch (Exception e) {
       JsonNode result = Json.newObject()
           .put("status", "failed")
@@ -965,11 +838,15 @@ public class Dataset extends Controller {
     return Promise.promise(() -> ok(Json.newObject().put("status", "ok")));
   }
 
-  public static Promise<Result> getDatasetSuggestedCompliance(int datasetId) {
+  public static Promise<Result> getDatasetAutoClassification(int datasetId) {
+    DatasetClassification record = null;
     try {
-      String urn = getDatasetUrnByIdOrCache(datasetId);
+      String urn = DATASETS_DAO.getDatasetUrnById(JDBC_TEMPLATE, datasetId);
+      if (urn == null) {
+        throw new IllegalArgumentException("Dataset not found, ID: " + datasetId);
+      }
 
-      return getDatasetSuggestedCompliance(urn);
+      record = trimDatasetClassification(CLASSIFICATION_DAO.getDatasetClassification(urn));
     } catch (Exception e) {
       JsonNode result = Json.newObject()
           .put("status", "failed")
@@ -978,32 +855,43 @@ public class Dataset extends Controller {
 
       return Promise.promise(() -> ok(result));
     }
+
+    JsonNode result = Json.newObject().put("status", "ok").set("autoClassification", Json.toJson(record));
+
+    return Promise.promise(() -> ok(result));
   }
 
-  public static Promise<Result> getDatasetSuggestedCompliance(String datasetUrn) {
-    DsComplianceSuggestion record = null;
-    try {
-      record = COMPLIANCE_DAO.findComplianceSuggestionByUrn(datasetUrn);
-    } catch (Exception e) {
-      if (e.toString().contains("Response status 404")) {
-        JsonNode result =
-            Json.newObject().put("status", "failed").put("error", "true").put("msg", "No entity found for query");
-        return Promise.promise(() -> ok(result));
+  /**
+   * Trim not required information from DatasetClassification for UI, return a new record.
+   * @param record DatasetClassification
+   * @return DatasetClassification
+   * @throws IOException
+   */
+  private static DatasetClassification trimDatasetClassification(DatasetClassification record) throws IOException {
+    ObjectMapper mapper = Json.mapper();
+    DatasetClassification newRecord = new DatasetClassification(record.getUrn(), null, record.getLastModified());
+
+    List<Map<String, Object>> entities =
+        mapper.readValue(record.getClassificationResult(), new TypeReference<List<Map<String, Object>>>() {
+        });
+
+    for (Map<String, Object> entity : entities) {
+      entity.remove("dataType");
+      Map<String, Object> identifierTypePrediction = (Map<String, Object>) entity.get("identifierTypePrediction");
+      if (identifierTypePrediction != null) {
+        identifierTypePrediction.remove("priority");
+        identifierTypePrediction.remove("type");
+        identifierTypePrediction.remove("exclusive");
       }
-
-      Logger.error("Fetch compliance suggestion Error: ", e);
-      JsonNode result =
-          Json.newObject().put("status", "failed").put("error", "true").put("msg", "Fetch data Error: " + e.toString());
-      return Promise.promise(() -> ok(result));
+      Map<String, Object> logicalTypePrediction = (Map<String, Object>) entity.get("logicalTypePrediction");
+      if (logicalTypePrediction != null) {
+        logicalTypePrediction.remove("priority");
+        logicalTypePrediction.remove("type");
+        logicalTypePrediction.remove("exclusive");
+      }
     }
 
-    if (record == null) {
-      JsonNode result =
-          Json.newObject().put("status", "failed").put("error", "true").put("msg", "No entity found for query");
-      return Promise.promise(() -> ok(result));
-    }
-
-    JsonNode result = Json.newObject().put("status", "ok").set("complianceSuggestion", Json.toJson(record));
-    return Promise.promise(() -> ok(result));
+    newRecord.setClassificationResult(mapper.writeValueAsString(entities));
+    return newRecord;
   }
 }
