@@ -330,6 +330,7 @@ class HiveExtract:
                         TableInfo.is_compressed: row_value[12],
                         TableInfo.is_storedassubdirectories: row_value[13],
                         TableInfo.etl_source: 'COLUMN_V2',
+                        TableInfo.category: row_value[27],
                         TableInfo.field_list: field_list[:]}
 
         field_list = [] # empty it
@@ -394,6 +395,7 @@ class HiveExtract:
          TableInfo.is_storedassubdirectories: row_value[13], TableInfo.etl_source: 'SERDE_PARAMS',
          TableInfo.schema_literal: literal,
          TableInfo.schema_url: row_value[15],
+         TableInfo.category: row_value[27],
          TableInfo.field_delimiter: row_value[16]})
       table_idx += 1
       self.table_dict[full_name] = table_idx
