@@ -53,6 +53,9 @@
         },
         "db_id": {
           "type": "text"
+        },
+        "category": {
+          "type": "text"
         }
       }
     },
