@@ -53,10 +53,11 @@ class TableInfo:
 
   field_list = 'fields'
   schema_literal = 'schema_literal'
+  catalog = 'catalog'
 
   optional_prop = [create_time, serialization_format, field_delimiter, schema_url, db_id, table_id, serde_id,
                    table_type, location, view_expended_text, input_format, output_format, is_compressed,
-                   is_storedassubdirectories, etl_source]
+                   is_storedassubdirectories, etl_source, catalog]
 
 
 class HiveExtract:
@@ -122,7 +123,7 @@ class HiveExtract:
     4 DB_ID, 5 TBL_ID,6 SD_ID, 7 LOCATION, 8 TBL_TYPE, 9 VIEW_EXPENDED_TEXT, 10 INPUT_FORMAT,11  OUTPUT_FORMAT,
     12 IS_COMPRESSED, 13 IS_STOREDASSUBDIRECTORIES, 14 INTEGER_IDX, 15 COLUMN_NAME, 16 TYPE_NAME, 17 COMMENT
     18 dataset_name, 19 version, 20 TYPE, 21 storage_type, 22 native_name, 23 logical_name, 24 created_time,
-    25 dataset_urn, 26 source_modified_time)
+    25 dataset_urn, 26 source_modified_time, 27 catalog)
     """
     if is_dali:
       tbl_info_sql = """SELECT d.NAME DB_NAME, t.TBL_NAME TBL_NAME,
@@ -151,11 +152,12 @@ class HiveExtract:
           then substring(t.TBL_NAME, 1, length(t.TBL_NAME) - length(substring_index(t.TBL_NAME, '_', -3)) - 1)
           else t.TBL_NAME
         end logical_name, unix_timestamp(now()) created_time, concat('dalids:///', d.NAME, '/', t.TBL_NAME) dataset_urn,
-        p.PARAM_VALUE source_modified_time
+        p.PARAM_VALUE source_modified_time, catalog.PARAM_VALUE as catalog
       FROM TBLS t join DBS d on t.DB_ID=d.DB_ID
       JOIN SDS s on t.SD_ID = s.SD_ID
       JOIN COLUMNS_V2 c on s.CD_ID = c.CD_ID
       JOIN TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
+      LEFT JOIN (select TBL_ID, PARAM_VALUE FROM TABLE_PARAMS WHERE PARAM_KEY = 'whcatalog') catalog ON  t.TBL_ID = catalog.TBL_ID
       WHERE p.PARAM_KEY = 'transient_lastDdlTime' and
         d.NAME in ('{db_name}') and (d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and d.NAME not like 'dalitest%' and t.TBL_TYPE = 'VIRTUAL_VIEW'
       order by DB_NAME, dataset_name, version DESC
@@ -180,11 +182,12 @@ class HiveExtract:
           else 'Table'
         end storage_type, concat(d.NAME, '.', t.TBL_NAME) native_name, t.TBL_NAME logical_name,
         unix_timestamp(now()) created_time, concat('hive:///', d.NAME, '/', t.TBL_NAME) dataset_urn,
-        p.PARAM_VALUE source_modified_time
+        p.PARAM_VALUE source_modified_time, catalog.PARAM_VALUE as catalog
       FROM TBLS t join DBS d on t.DB_ID=d.DB_ID
       JOIN SDS s on t.SD_ID = s.SD_ID
       JOIN COLUMNS_V2 c on s.CD_ID = c.CD_ID
       JOIN TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
+      LEFT JOIN (select TBL_ID, PARAM_VALUE FROM TABLE_PARAMS WHERE PARAM_KEY = 'whcatalog') catalog ON  t.TBL_ID = catalog.TBL_ID
       WHERE p.PARAM_KEY = 'transient_lastDdlTime' and
         t.TBL_ID in (select distinct TBL_ID FROM TABLE_PARAMS where PARAM_KEY='wherehows' AND PARAM_VALUE='true') and
         d.NAME in ('{db_name}') and not ((d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and t.TBL_TYPE = 'VIRTUAL_VIEW')
@@ -210,11 +213,12 @@ class HiveExtract:
           else 'Table'
         end storage_type, concat(d.NAME, '.', t.TBL_NAME) native_name, t.TBL_NAME logical_name,
         unix_timestamp(now()) created_time, concat('hive:///', d.NAME, '/', t.TBL_NAME) dataset_urn,
-        p.PARAM_VALUE source_modified_time
+        p.PARAM_VALUE source_modified_time, catalog.PARAM_VALUE as catalog
       FROM TBLS t join DBS d on t.DB_ID=d.DB_ID
       JOIN SDS s on t.SD_ID = s.SD_ID
       JOIN COLUMNS_V2 c on s.CD_ID = c.CD_ID
       JOIN TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
+      LEFT JOIN (select TBL_ID, PARAM_VALUE FROM TABLE_PARAMS WHERE PARAM_KEY = 'whcatalog') catalog ON  t.TBL_ID = catalog.TBL_ID
       WHERE p.PARAM_KEY = 'transient_lastDdlTime' and
         t.TBL_ID NOT in (select distinct TBL_ID FROM TABLE_PARAMS where PARAM_KEY='wherehows' AND PARAM_VALUE='true') and
         d.NAME in ('{db_name}') and not ((d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and t.TBL_TYPE = 'VIRTUAL_VIEW')
@@ -240,11 +244,12 @@ class HiveExtract:
           else 'Table'
         end storage_type, concat(d.NAME, '.', t.TBL_NAME) native_name, t.TBL_NAME logical_name,
         unix_timestamp(now()) created_time, concat('hive:///', d.NAME, '/', t.TBL_NAME) dataset_urn,
-        p.PARAM_VALUE source_modified_time
+        p.PARAM_VALUE source_modified_time, catalog.PARAM_VALUE as catalog
       FROM TBLS t join DBS d on t.DB_ID=d.DB_ID
       JOIN SDS s on t.SD_ID = s.SD_ID
       JOIN COLUMNS_V2 c on s.CD_ID = c.CD_ID
       JOIN TABLE_PARAMS p on p.TBL_ID = t.TBL_ID
+      LEFT JOIN (select TBL_ID, PARAM_VALUE FROM TABLE_PARAMS WHERE PARAM_KEY = 'whcatalog') catalog ON  t.TBL_ID = catalog.TBL_ID
       WHERE p.PARAM_KEY = 'transient_lastDdlTime' and
         d.NAME in ('{db_name}') and not ((d.NAME like '%\_mp' or d.NAME like '%\_mp\_versioned') and t.TBL_TYPE = 'VIRTUAL_VIEW')
       order by 1,2
