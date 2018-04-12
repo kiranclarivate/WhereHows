@@ -54,7 +54,7 @@ class HiveLoad:
         LOAD DATA LOCAL INFILE '{source_file}'
         INTO TABLE stg_dict_dataset
         FIELDS TERMINATED BY '\Z' ESCAPED BY '\0'
-        (`name`, `schema`, properties, fields, urn, source, dataset_type, storage_type, @sample_partition_full_path, source_created_time, @source_modified_time)
+        (`name`, `schema`, properties, fields, urn, source, dataset_type, storage_type, @sample_partition_full_path, source_created_time, @source_modified_time, category)
         SET db_id = {db_id},
             source_modified_time=nullif(@source_modified_time,''),
             sample_partition_full_path=nullif(@sample_partition_full_path,''),
@@ -100,7 +100,8 @@ class HiveLoad:
           source_modified_time,
           created_time,
           wh_etl_exec_id,
-          db_id
+          db_id,
+          category
         )
         select s.name, s.schema, s.schema_type, s.fields,
           s.properties, s.urn,
@@ -109,7 +110,7 @@ class HiveLoad:
           s.dataset_type, s.hive_serdes_class, s.is_partitioned,
           s.partition_layout_pattern_id, s.sample_partition_full_path,
           s.source_created_time, s.source_modified_time, UNIX_TIMESTAMP(now()),
-          s.wh_etl_exec_id, s.db_id
+          s.wh_etl_exec_id, s.db_id, s.category
         from stg_dict_dataset s
         where s.db_id = {db_id}
         on duplicate key update

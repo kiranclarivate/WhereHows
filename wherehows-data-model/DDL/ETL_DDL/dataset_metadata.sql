@@ -45,6 +45,7 @@ CREATE TABLE `stg_dict_dataset` (
   `created_time`                INT UNSIGNED COMMENT 'wherehows created time',
   `modified_time`               INT UNSIGNED COMMENT 'latest wherehows modified',
   `wh_etl_exec_id`              BIGINT COMMENT 'wherehows etl execution id that modified this record',
+  `category`                    varchar(50) NULL COMMENT 'such as Reference, Raw, Intermediate',
   PRIMARY KEY (`urn`, `db_id`)
 )
   ENGINE = InnoDB
@@ -87,6 +88,7 @@ CREATE TABLE `dict_dataset` (
   `created_time`                INT UNSIGNED COMMENT 'wherehows created time',
   `modified_time`               INT UNSIGNED COMMENT 'latest wherehows modified',
   `wh_etl_exec_id`              BIGINT COMMENT 'wherehows etl execution id that modified this record',
+  `category`                    varchar(50) NULL COMMENT 'such as Reference, Raw, Intermediate',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_dataset_db_id_urn` (`db_id`,`urn`)
 )
