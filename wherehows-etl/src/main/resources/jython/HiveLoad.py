@@ -48,7 +48,7 @@ class HiveLoad:
 
 
   def load_metadata(self):
-      self.logger.info("Load dataset metadata from " + self.input_schema_file)
+    self.logger.info("Load dataset metadata from " + self.input_schema_file)
 
     load_cmd = """
         DELETE FROM stg_dict_dataset WHERE db_id = {db_id};
