@@ -55,7 +55,8 @@
           "type": "text"
         },
         "category": {
-          "type": "text"
+          "type": "text",
+          "analyzer": "keyword_analyzer"
         }
       }
     },
