@@ -36,22 +36,6 @@ public class DatasetSchemaRecord extends AbstractRecord {
   String category;
 
   public DatasetSchemaRecord(String name, String schema, String properties, String fields, String urn, String source,
-                             String samplePartitionFullPath, Integer sourceCreated, Integer sourceModified, String category) {
-    this.name = name;
-    this.schema = schema;
-    this.properties = properties;
-    this.fields = fields;
-    this.urn = urn;
-    this.source = source;
-    this.datasetType = null;
-    this.storageType = null;
-    this.samplePartitionFullPath = samplePartitionFullPath;
-    this.sourceCreated = sourceCreated;
-    this.sourceModified = sourceModified;
-    this.category = category;
-
-  }
-  public DatasetSchemaRecord(String name, String schema, String properties, String fields, String urn, String source,
                              String samplePartitionFullPath, Integer sourceCreated, Integer sourceModified) {
     this.name = name;
     this.schema = schema;
@@ -82,6 +66,24 @@ public class DatasetSchemaRecord extends AbstractRecord {
     this.sourceCreated = sourceCreated;
     this.sourceModified = sourceModified;
   }
+
+  public DatasetSchemaRecord(String name, String schema, String properties, String fields, String urn, String source,
+                             String datasetType, String storageType, String samplePartitionFullPath,
+                             Integer sourceCreated, Integer sourceModified, String category) {
+    this.name = name;
+    this.schema = schema;
+    this.properties = properties;
+    this.fields = fields;
+    this.urn = urn;
+    this.source = source;
+    this.datasetType = datasetType;
+    this.storageType = storageType;
+    this.samplePartitionFullPath = samplePartitionFullPath;
+    this.sourceCreated = sourceCreated;
+    this.sourceModified = sourceModified;
+    this.category = category;
+  }
+
 
   @Override
   public List<Object> fillAllFields() {
