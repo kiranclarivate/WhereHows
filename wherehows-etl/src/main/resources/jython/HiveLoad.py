@@ -48,6 +48,8 @@ class HiveLoad:
 
 
   def load_metadata(self):
+      self.logger.info("Load dataset metadata from " + self.input_schema_file)
+
     load_cmd = """
         DELETE FROM stg_dict_dataset WHERE db_id = {db_id};
 
@@ -120,7 +122,7 @@ class HiveLoad:
           dataset_type=s.dataset_type, hive_serdes_class=s.hive_serdes_class, is_partitioned=s.is_partitioned,
           partition_layout_pattern_id=s.partition_layout_pattern_id, sample_partition_full_path=s.sample_partition_full_path,
           source_created_time=s.source_created_time, source_modified_time=s.source_modified_time,
-          modified_time=UNIX_TIMESTAMP(now()), wh_etl_exec_id=s.wh_etl_exec_id
+          modified_time=UNIX_TIMESTAMP(now()), wh_etl_exec_id=s.wh_etl_exec_id, category=s.category
         ;
         
         -- handle deleted or renamed hive tables 
