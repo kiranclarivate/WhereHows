@@ -33,7 +33,24 @@ public class DatasetSchemaRecord extends AbstractRecord {
   String samplePartitionFullPath;
   Integer sourceCreated;
   Integer sourceModified;
+  String category;
 
+  public DatasetSchemaRecord(String name, String schema, String properties, String fields, String urn, String source,
+                             String samplePartitionFullPath, Integer sourceCreated, Integer sourceModified, String category) {
+    this.name = name;
+    this.schema = schema;
+    this.properties = properties;
+    this.fields = fields;
+    this.urn = urn;
+    this.source = source;
+    this.datasetType = null;
+    this.storageType = null;
+    this.samplePartitionFullPath = samplePartitionFullPath;
+    this.sourceCreated = sourceCreated;
+    this.sourceModified = sourceModified;
+    this.category = category;
+
+  }
   public DatasetSchemaRecord(String name, String schema, String properties, String fields, String urn, String source,
                              String samplePartitionFullPath, Integer sourceCreated, Integer sourceModified) {
     this.name = name;
@@ -80,6 +97,7 @@ public class DatasetSchemaRecord extends AbstractRecord {
     allFields.add(samplePartitionFullPath);
     allFields.add(sourceCreated);
     allFields.add(sourceModified);
+    allFields.add(category);
     return allFields;
   }
 
