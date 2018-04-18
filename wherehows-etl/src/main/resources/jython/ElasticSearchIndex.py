@@ -243,6 +243,21 @@ class ElasticSearchIndex():
              or urn like "hive:///teleopti/%"
           ON DUPLICATE KEY UPDATE
           static_boosting_score = 65;
+          
+        INSERT IGNORE INTO cfg_search_score_boost
+          (id, static_boosting_score)
+          SELECT id, 50 FROM dict_dataset
+          WHERE category = 'reference'
+          ON DUPLICATE KEY UPDATE
+          static_boosting_score = 50;
+          
+        INSERT IGNORE INTO cfg_search_score_boost
+          (id, static_boosting_score)
+          SELECT id, 25 FROM dict_dataset
+          WHERE category = 'raw'
+          ON DUPLICATE KEY UPDATE
+          static_boosting_score = 25;
+          
 
           SELECT d.*,
               COALESCE(s.static_boosting_score,1) as static_boosting_score
