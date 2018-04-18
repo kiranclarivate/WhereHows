@@ -198,52 +198,7 @@ class ElasticSearchIndex():
           """ % last_unixtime
         else:
             sql = """
-          INSERT IGNORE INTO cfg_search_score_boost
-          (id, static_boosting_score)
-          SELECT id, 80 FROM dict_dataset
-          WHERE urn like "kafka:///%"
-             or urn like "oracle:///%"
-             or urn like "espresso:///%"
-          ON DUPLICATE KEY UPDATE
-          static_boosting_score = 80;
-
-
-          INSERT IGNORE INTO cfg_search_score_boost
-          (id, static_boosting_score)
-          SELECT id, 75 FROM dict_dataset
-          WHERE urn like "dalids:///%"
-          ON DUPLICATE KEY UPDATE
-          static_boosting_score = 75;
-
-
-          INSERT IGNORE INTO cfg_search_score_boost
-          (id, static_boosting_score)
-          SELECT id, 70 FROM dict_dataset
-          WHERE urn like "hdfs:///data/tracking/%"
-             or urn like "hdfs:///data/databases/%"
-             or urn like "hive:///tracking/%"
-             or urn like "hive:///prod_%/%"
-          ON DUPLICATE KEY UPDATE
-          static_boosting_score = 70;
-
-
-          INSERT IGNORE INTO cfg_search_score_boost
-          (id, static_boosting_score)
-          SELECT id, 65 FROM dict_dataset
-          WHERE urn like "hdfs:///data/external/%"
-             or urn like "hdfs:///data/derived/%"
-             or urn like "hdfs:///data/foundation/%"
-             or urn like "hive:///hirein/%"
-             or urn like "hive:///rightnow/%"
-             or urn like "hive:///lla/%"
-             or urn like "hive:///append_rightnow/%"
-             or urn like "hive:///decipher/%"
-             or urn like "hive:///timeforce/%"
-             or urn like "hive:///jira/%"
-             or urn like "hive:///teleopti/%"
-          ON DUPLICATE KEY UPDATE
-          static_boosting_score = 65;
-          
+         
         INSERT IGNORE INTO cfg_search_score_boost
           (id, static_boosting_score)
           SELECT id, 50 FROM dict_dataset
