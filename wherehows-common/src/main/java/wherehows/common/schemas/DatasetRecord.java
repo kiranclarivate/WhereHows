@@ -140,6 +140,12 @@ public class DatasetRecord extends AbstractRecord {
     this.id = id;
   }
 
+  public Integer getDbId() { return dbId; }
+
+  public void SetDbId (Integer dbId) {
+    this.dbId = dbId;
+  }
+
   public String getName() {
     return name;
   }
