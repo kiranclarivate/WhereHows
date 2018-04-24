@@ -23,7 +23,7 @@ import wherehows.common.utils.StringUtil;
  */
 public class DatasetRecord extends AbstractRecord {
   Integer id;
-  Integer dbId;
+  Integer dbId = 0;
   String name;
   String schema;
   String schemaType;
