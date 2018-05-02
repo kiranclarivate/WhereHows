@@ -251,6 +251,8 @@ class OracleExtract:
     sample_data = []
 
     sql = 'SELECT * FROM %s WHERE ROWNUM <= %d' % (table_fullname, num_rows)
+    self.logger.info("sample sql = %s" %sql)
+
     cursor = self.conn_db.cursor()
     try:
       cursor.execute(sql)
@@ -259,6 +261,8 @@ class OracleExtract:
       if len(rows) == 0:
         self.logger.error("dataset {} is empty".format(table_fullname))
         return
+      else:
+        self.logger.info("sample fetched = %d" %len(rows))
 
       # retrieve column names
       columns = [i[0] for i in cursor.description]
