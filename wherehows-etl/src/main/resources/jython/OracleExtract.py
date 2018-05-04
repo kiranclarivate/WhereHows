@@ -30,7 +30,7 @@ class OracleExtract:
   field_output_list = []
   sample_output_list = []
 
-  ignored_owner_regex = 'ANONYMOUS|PUBLIC|SYS|SYSTEM|DBSNMP|MDSYS|CTXSYS|XDB|TSMSYS|ORACLE.*|APEX.*|TEST?*|GG_.*|\$'
+  ignored_owner_regex = 'ANONYMOUS|PUBLIC|SQLTXPLAIN|SYS|SYSTEM|DBSNMP|MDSYS|CTXSYS|XDB|TSMSYS|ORACLE.*|APEX.*|TEST?*|GG_.*|\$'
 
   def __init__(self):
     self.logger = LoggerFactory.getLogger('jython script : ' + self.__class__.__name__)
