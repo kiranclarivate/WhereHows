@@ -18,7 +18,7 @@ mkdir -p $WHZ_ETL_TEMP_DIR
 
 #echo "creating symlink ..."
 #ln -sf ${EIDDO_DIR}/${CLOUD_APP}/conf/application.conf /opt/${CLOUD_APP}/conf/.
-export JAVA_OPTS="-Xms512m -Xmx2048m -Dhttp.port=19001"
+export JAVA_OPTS="-Xms512m -Xmx2048m -Dhttp.port=${PORT}"
 export PYTHONHOME="${APP_DIR}/jython"
 
 echo "=== starting {$CLOUD_APP} ==="
