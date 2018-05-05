@@ -3,6 +3,7 @@ EIDDO_REPO='wherehows'
 CLOUD_APP='wherehows-backend'
 EIDDO_DIR='/etc/reuters/eiddo'
 APP_DIR="/opt/${CLOUD_APP}"
+PORT=8899
 
 echo "sourcing ${EIDDO_DIR}/${CLOUD_APP}/application.env ..."
 set -a 

@@ -1,0 +1,1 @@
+{"name" :"RRXXYYYY01II","urn" : "file:///backyear/print/merge/outgoing/RRXXYYYY01II","schema" : "{\"name\": \"DUMMY\", \"fields\": [{\"nullable\": \"Y\",\"type\": \"INT\", \"maxByteLength\": 4, \"name\": \"DUMMY\", \"doc\": \"\"}]}","properties" : "","schema_type" : "JSON","fields" :"","source" : "file","location_prefix" : "", "is_partitioned" : "Y"}
