@@ -8,7 +8,7 @@ bin/
 .project
 .classpath
 *.swp
-*.jar
+//*.jar
 *.idea
 *.iml
 *.class
