@@ -147,7 +147,7 @@ public class LineageDAO extends AbstractMySQLOpenSourceDAO
 			"    ON je.app_id = fj.app_id AND je.flow_id = fj.flow_id AND je.job_id = fj.job_id " +
 			" WHERE jedl.app_id = ? " +
 			"   AND jedl.flow_exec_id = ? " +
-			"   AND FROM_UNIXTIME(job_finished_unixtime) >  CURRENT_DATE - INTERVAL ? DAY";
+			"   AND FROM_UNIXTIME(job_finished_unixtime) >  CURRENT_DATE - INTERVAL ? DAY AND fj.pre_jobs is not null";
 
 	private final static String GET_LATEST_FLOW_EXEC_ID =
 			"SELECT MAX(flow_exec_id) " +
@@ -1265,6 +1265,9 @@ public class LineageDAO extends AbstractMySQLOpenSourceDAO
 		resultNode.set("nodes", Json.toJson(nodes));
 		resultNode.set("links", Json.toJson(edges));
 		resultNode.put("flowName", flowName);
+		resultNode.put("applicationName", applicationName);
+		resultNode.put("project", project);
+		
 		return resultNode;
 	}
 

@@ -326,5 +326,9 @@ public class Constant {
   public static final String CSV_LINEAGE = "csv.lineage";
   public static final String CSV_DATASET = "csv.dataset";
   public static final String DB_ID = "dataset.db_id";
+  public static final String APP_DB_ID_KEY = "job.db_id";
+  public static final String APP_NAME = "job.app_name";
+ 
+  
 
 }

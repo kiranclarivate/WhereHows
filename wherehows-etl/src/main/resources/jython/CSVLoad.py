@@ -25,7 +25,7 @@ class SchedulerTransform:
   _tables = {"flows": {"columns": "app_id, flow_name,flow_group, flow_path, flow_level, source_version, source_created_time, source_modified_time, wh_etl_exec_id",
                        "file": "flow.csv",
                        "table": "stg_flow"},
-             "jobs": {"columns": "app_id, flow_path, source_version, job_name, job_path, job_type, wh_etl_exec_id,AdditionalInfo",
+             "jobs": {"columns": "app_id, flow_path, source_version, job_name, job_path, job_type, wh_etl_exec_id,additional_info",
                       "file": "job.csv",
                       "table": "stg_flow_job"},
              "dags": {"columns": "app_id, flow_path, source_version, source_job_path, target_job_path, wh_etl_exec_id",
@@ -81,6 +81,8 @@ class SchedulerTransform:
   def __init__(self, args, scheduler_type):
     self.logger = LoggerFactory.getLogger('jython script : ' + self.__class__.__name__)
     self.app_id = int(args[Constant.JOB_REF_ID_KEY])
+    self.db_id = int(args[Constant.APP_DB_ID_KEY])
+    self.app_name = args[Constant.APP_NAME]
     self.wh_con = zxJDBC.connect(args[Constant.WH_DB_URL_KEY],
                                  args[Constant.WH_DB_USERNAME_KEY],
                                  args[Constant.WH_DB_PASSWORD_KEY],
@@ -324,7 +326,7 @@ class SchedulerTransform:
             (SELECT source_job_id as job_id, source_version, SUBSTRING(GROUP_CONCAT(distinct target_job_id SEPARATOR ','), 1, 4000) as post_jobs
             FROM {table} WHERE app_id = {app_id} AND source_job_id != target_job_id
             GROUP BY source_job_id, source_version) as d
-            ON sj.job_id = d.job_id AND sj.source_version = d.source_version
+            ON sj.job_id = d.job_id 
             SET sj.post_jobs = d.post_jobs
             WHERE sj.app_id = {app_id};
             """.format(app_id=self.app_id, table=t.get("table"))
@@ -337,7 +339,7 @@ class SchedulerTransform:
             (SELECT target_job_id as job_id, source_version, SUBSTRING(GROUP_CONCAT(distinct source_job_id SEPARATOR ','), 1, 4000) as pre_jobs
             FROM {table} WHERE app_id = {app_id} AND source_job_id != target_job_id
             GROUP BY target_job_id, source_version) as d
-            ON sj.job_id = d.job_id AND sj.source_version = d.source_version
+            ON sj.job_id = d.job_id 
             SET sj.pre_jobs = d.pre_jobs
             WHERE sj.app_id = {app_id};
             """.format(app_id=self.app_id, table=t.get("table"))
@@ -612,12 +614,12 @@ class SchedulerTransform:
 
     # Clear stagging table
     query = """
-             DELETE FROM stg_dict_dataset WHERE db_id = 10003
-            """
+             DELETE FROM stg_dict_dataset WHERE db_id = {db_id}
+            """.format(db_id=self.db_id)
     self.logger.debug(query)
     self.wh_cursor.execute(query)
     self.wh_con.commit()
-    #query = self._clear_staging_tempalte.format(table=t.get("table"), app_id=self.app_id)
+   # query = self._clear_staging_tempalte.format(table=t.get("table"), app_id=self.app_id)
     #self.logger.debug(query)
     #self.wh_cursor.execute(query)
     #self.wh_con.commit()
@@ -661,7 +663,7 @@ class SchedulerTransform:
         s.source_created_time, s.source_modified_time, UNIX_TIMESTAMP(now()),
         s.wh_etl_exec_id
     from stg_dict_dataset s
-    where s.db_id = 10003
+    where s.db_id = {db_id}
     on duplicate key update
         `name`=s.name, `schema`=s.schema, schema_type=s.schema_type, `fields`=s.fields,
         properties=s.properties, `source`=s.source, location_prefix=s.location_prefix, parent_name=s.parent_name,
@@ -670,7 +672,7 @@ class SchedulerTransform:
         partition_layout_pattern_id=s.partition_layout_pattern_id, sample_partition_full_path=s.sample_partition_full_path,
         source_created_time=s.source_created_time, source_modified_time=s.source_modified_time,
         modified_time=UNIX_TIMESTAMP(now()), wh_etl_exec_id=s.wh_etl_exec_id;
-            """
+            """.format(db_id=self.db_id)
     self.logger.debug(query)
     self.wh_cursor.execute(query)
     self.wh_con.commit()
@@ -679,6 +681,21 @@ class SchedulerTransform:
             update job_execution_data_lineage jedl
             join job_execution je on je.app_id = jedl.app_id and je.job_exec_uuid = jedl.job_exec_uuid and je.job_name= jedl.job_name
               set jedl.flow_exec_id = je.flow_exec_id where je.app_id = {app_id}
+            """.format(app_id=self.app_id)
+    self.logger.debug(query)
+    self.wh_cursor.execute(query)
+    self.wh_con.commit()
+    query = """
+            update job_execution_data_lineage jedl
+            join job_execution je on je.app_id = jedl.app_id and je.job_exec_uuid = jedl.job_exec_uuid and je.job_name= jedl.job_name
+              set jedl.job_exec_id = je.job_exec_id where je.app_id = {app_id}
+            """.format(app_id=self.app_id)
+    self.logger.debug(query)
+    self.wh_cursor.execute(query)
+    self.wh_con.commit()
+    query = """
+            update job_execution_data_lineage jedl
+            set jedl.job_finished_unixtime = unix_timestamp(NOW()) where jedl.app_id = {app_id}
             """.format(app_id=self.app_id)
     self.logger.debug(query)
     self.wh_cursor.execute(query)
