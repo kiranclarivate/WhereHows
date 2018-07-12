@@ -43,5 +43,9 @@ export default [
     datasetId: 0,
     nodeName: 'voldemort',
     nodeUrl: '#/datasets/name/voldemort/page/1?urn=voldemort:///'
-  }
+  }, {
+	    datasetId:0,
+	    nodeName:'greenplum',
+	    nodeUrl:'#/datasets/name/greenplum/page/1?urn=greenplum:///'
+      }
 ];
