@@ -10,7 +10,7 @@ let g_downLevel = 1;
 let $field;
 let $results;
 
-function setupSearch({ lineageType, lineageId }) {
+function setupSearch({ lineageType, lineageId, application, project }) {
   const height = $(window).height() * 0.99;
 
   $('#graphSplitter').height(height * 0.6);
@@ -24,7 +24,7 @@ function setupSearch({ lineageType, lineageId }) {
     sizeTop: true
   });
 
-  refreshLineageData(lineageType, lineageId);
+  refreshLineageData(lineageType, lineageId, application, project);
 
   $('#rotationgraphbtn').on('click', function() {
     if (window.g_currentData) {
@@ -44,7 +44,7 @@ function setupSearch({ lineageType, lineageId }) {
   });
 }
 
-function refreshLineageData(type, id) {
+function refreshLineageData(type, id, applicationNm, projectNm) {
   let application = $('#application').val();
   if (application) {
     application = application.replace(/\./g, ' ');
@@ -114,15 +114,15 @@ function refreshLineageData(type, id) {
       }
     });
   } else if (type === 'azkaban') {
-    //url = '/api/v1/lineage/flow/' + application + '/' + project + '/' + flow;
-	url = '/api/v1/lineage/flow/' + 'DFPLUS' + '/' + 'DFPLUS' + '/' + id;
+    url = '/api/v1/lineage/flow/' + applicationNm + '/' + projectNm + '/' + id;
+     
     $('#loading').show();
     $.get(url, function(data) {
       if (data && data.status === 'ok') {
         $('#loading').hide();
         var titleObj = $('#title');
         if (titleObj && data.data && data.data.flowName) {
-          titleObj.text('Lineage for: ' + application + '/' + project + '/' + data.data.flowName);
+          titleObj.text('Lineage for: ' + applicationNm + '/' + projectNm + '/' + data.data.flowName);
         }
         renderTables(data.data);
         window.g_currentData = data.data;
@@ -899,8 +899,8 @@ const d3LineageTooltip = function(gravity) {
 };
 
 export default Ember.Route.extend({
-  model({ flowId }) {
-	  Ember.run.scheduleOnce('afterRender', this, setupSearch, { lineageId: flowId, lineageType: 'azkaban' });
+  model({ flowId,application,project }) {
+	  Ember.run.scheduleOnce('afterRender', this, setupSearch, { lineageId: flowId, lineageType: 'azkaban', application: application,project: project });
   },
 
   deactivate() {
