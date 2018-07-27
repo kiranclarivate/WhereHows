@@ -633,7 +633,8 @@ class SchedulerTransform:
 
     query = """
               INSERT INTO dict_dataset
-    ( `name`,
+    ( `db_id`,
+      `name`,
       `schema`,
       schema_type,
       `fields`,
@@ -655,7 +656,7 @@ class SchedulerTransform:
       created_time,
       wh_etl_exec_id
     )
-    select s.name, s.schema, s.schema_type, s.fields, s.properties, s.urn,
+    select s.db_id,s.name, s.schema, s.schema_type, s.fields, s.properties, s.urn,
         s.source, s.location_prefix, s.parent_name,
         s.storage_type, s.ref_dataset_id, s.is_active,
         s.dataset_type, s.hive_serdes_class, s.is_partitioned,
@@ -665,7 +666,7 @@ class SchedulerTransform:
     from stg_dict_dataset s
     where s.db_id = {db_id}
     on duplicate key update
-        `name`=s.name, `schema`=s.schema, schema_type=s.schema_type, `fields`=s.fields,
+        `db_id`=s.db_id,`name`=s.name, `schema`=s.schema, schema_type=s.schema_type, `fields`=s.fields,
         properties=s.properties, `source`=s.source, location_prefix=s.location_prefix, parent_name=s.parent_name,
         storage_type=s.storage_type, ref_dataset_id=s.ref_dataset_id, is_active=s.is_active,
         dataset_type=s.dataset_type, hive_serdes_class=s.hive_serdes_class, is_partitioned=s.is_partitioned,
