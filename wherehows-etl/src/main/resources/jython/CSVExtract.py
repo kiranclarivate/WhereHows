@@ -141,7 +141,7 @@ class CSVExtract:
                 rowDict["source_version"] = number
              
              	
-              elif field not in( 'flow_name / schedule name','Job Name','Dependencies','Submitted File Name','Inputs','Outputs','Programs/Processes 2','Outputs 2','Inputs 2') and mydict["flow_name / schedule name"]:
+              elif field not in( 'flow_name / schedule name','Job Name','Dependencies','Submitted File Name','Inputs','Outputs','Programs/Processes 2','Outputs 2','Inputs 2','Programs/Processes') and mydict["flow_name / schedule name"]:
                 jsonDict[field] = mydict[field]
                 rowDict["additional_info"] = json.dumps(jsonDict)
             
